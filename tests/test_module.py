@@ -8,6 +8,7 @@
 import pytest
 from wordle_helper.wordle_no_spoiler_helper import *
 
+
 @pytest.fixture
 def real_cases():
     return [
