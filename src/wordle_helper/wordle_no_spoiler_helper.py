@@ -2,7 +2,33 @@
 
 WORDLE_LENGTH = 5
 MAX_TRY = 6  # Not strictly enforced here
+ALL_UPPER_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
 from collections import defaultdict
+from dataclasses import dataclass, field
+from typing import Dict, Set
+
+@dataclass
+class OverallHint:
+    """Class for accumulated hints."""
+    # list of correct letters and None
+    # just treat this as the confimred answer of Wordle you can see on screen
+    green_hints: list = field(default_factory=list)
+
+    # yellow/wrong hint about the positions to exclude
+    # dict of letter to list of int (positions to exclude)
+    y_w_hint_excluded_position: Dict[str, list] = field(default_factory=dict)
+
+    # use to indicate the letters that should not be used for guessing
+    wrong_letters: Set[str] =  field(default_factory=set)
+
+    # {"A": (min, max)} # min max refer to the letter count
+    letter_min_max_counter: Dict[str, tuple] = field(default_factory=defaultdict)
+
+
+def letters_to_try(hint) -> list:
+    return [l for l in ALL_UPPER_LETTERS if l not in hint.wrong_letters]
+
 
 
 def wordle_game_rule_check(guess, answer):
@@ -45,7 +71,7 @@ def wordle_game_rule_check(guess, answer):
     output= [None] * len(answer)
 
     # for yellow / wrong case
-    correct_letter_count = {}
+    correct_letter_count = defaultdict(int)  # default value: 0
     y_w_guess_indices = []
 
     # Handle green hints first
@@ -78,21 +104,96 @@ def wordle_game_rule_check(guess, answer):
     return "".join(output)
 
 
+def generate_round_counter_info(guess, guess_result):
+    """Return a new dict of letter count based on input of guess and guess_result."""
+    # Example of counter:
+    #(min/current, max) -> default (1, WORDLE_LENGTH)
+    # A (first letter) -> (1,5)
+    # ---
+    # B (another letter) -> (1,4) , A -> (1,4)
+    # A (another A, AA) -> (2,5)
+    # ---
+    # C (new letter, CBA) -> (1,3), B-> (1,3), -> A(1,3)
+    # B (BBA or AAB, 2:1) -> (2,4), (1,3)
+    # A (all same letter) -> (3,5)
+
+    # So the rule is:
+    # New green or yellow hint
+    # - 1. existing same letter: min count of that letter +1
+    # - 2. other letters: max - 1
+    # - 3. otherwise - create entry for current letter, (1, MAX-len(current_dict))
+    # New wrong hint (multiple letter) - must be processed after B/G hint
+    # (watch out for case like ???B?, XXBBX, WWWGW)
+    # for that letter - max = min (set upper limit)
+    # Otherwise (wrong hint, single letter) - add to wrong letter (max length is 0)
+
+    letter_min_max_counters = dict()
+    wrong_letters = set()
+
+    # Green/Yellow hints
+    letter_used = 0
+    gy_gen = (i for i,r in enumerate(guess_result) if r == "G" or r == "Y")
+
+    for i in gy_gen:
+        guess_letter = guess[i]
+
+        # counter logic
+        if guess_letter not in letter_min_max_counters:
+            # 3. create new entry
+
+            # note that len(letter_min_max_counters) is wrong since possible to
+            # have multiple letters which leads to fewer entries in the dict
+            letter_min_max_counters[guess_letter] = (0, WORDLE_LENGTH - letter_used)
+
+        for k in letter_min_max_counters.keys():
+            cur_count, max_count = letter_min_max_counters[k]
+            if k == guess_letter:
+                # 1. same letter
+                letter_min_max_counters[k] = (cur_count+1, max_count)
+            else:
+                # 2. other letters
+                letter_min_max_counters[k] = (cur_count, max_count-1)
+
+        letter_used += 1
+
+
+    # Wrong hints
+    w_gen = (i for i,r in enumerate(guess_result) if r == "W")
+    for i in w_gen:
+        guess_letter = guess[i]
+
+        if guess_letter in letter_min_max_counters:
+            cur_count, max_count = letter_min_max_counters[guess_letter]
+            letter_min_max_counters[guess_letter] = (cur_count, cur_count)  # reduce max length to min/current length
+        else:
+            wrong_letters.add(guess_letter)  # same as max length is 0
+
+    return letter_min_max_counters, wrong_letters
+
+
 
 def parse_single_round_hint(guess, guess_result):
     # assume already passed length check
 
+    # some round-hint is invalid - like 4G1Y
+    # deal with it?
+
     current_confirmed_green = [None] * len(guess_result)  # None means UNKNOWN
+    y_w_hint_exclude = defaultdict(list)
 
     # green hints first
-    for i, r in enumerate(guess_result):
-        if r == "G":
-            current_confirmed_green[i] = guess[i]
+    for i, result in enumerate(guess_result):
+        guess_letter = guess[i]
 
-        # After excluding green hints in free position
-        # multiple letter, Yellow -> Hint of minimum amount of letter, and multiple position to exclude
+        if result == "G":
+            current_confirmed_green[i] = guess_letter
+        elif result == "Y":
+            y_w_hint_exclude[guess_letter].append(i)
+
+
+        # multiple letter (considering all letters), Yellow -> Hint of minimum amount of letter, and multiple position to exclude
         # single letter, Yellow -> Hint of minimum amount of letter, and position to exclude
-        # multiple letter, Wrong -> Tell us the maximum amount of letter, and multiple position to exclude, and should exclude from blind guess
+        # multiple letter (considering all letters), Wrong -> Tell us the maximum amount of letter, and multiple position to exclude, and should exclude from blind guess
         # single letter, Wrong -> Maximum amount of that letter is 0. Should exclude from blind guess
 
 
@@ -135,3 +236,24 @@ def verify_hints(lines):
 
 def show_permutation():
     pass
+
+def main():
+    hint = OverallHint()
+    print(hint)
+
+    #hint.wrong_letters.add("G")
+    #hint.wrong_letters.add("A")
+    hint.wrong_letters |= {"G", "A"}
+    print(hint)
+
+    should_try = ",".join(letters_to_try(hint))
+    print(should_try)
+
+    print("="*20)
+    d,s = generate_round_counter_info("CREPE","WYYYG")
+    print(d)
+    print(s)
+
+
+if __name__=="__main__":
+    main()
