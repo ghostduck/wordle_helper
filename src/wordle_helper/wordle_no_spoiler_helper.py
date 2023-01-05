@@ -2,6 +2,7 @@
 
 WORDLE_LENGTH = 5
 MAX_TRY = 6  # Not strictly enforced here
+from collections import defaultdict
 
 
 def wordle_game_rule_check(guess, answer):
@@ -54,10 +55,7 @@ def wordle_game_rule_check(guess, answer):
             output[i] = "G"
         else:
             # setup data for yellow / wrong case
-            if correct_letter not in correct_letter_count:
-                correct_letter_count[correct_letter] = 1
-            else:
-                correct_letter_count[correct_letter] += 1
+            correct_letter_count[correct_letter] += 1
 
             y_w_guess_indices.append(i)
 
