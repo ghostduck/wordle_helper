@@ -1,0 +1,15 @@
+# Invalid single round hint cases
+# 4G1Y - impossible, think that where can that Y fit
+BOCHI GGGGY
+
+# 3Y for same letter - impossible for >50% of same letter with Yellow output
+MMM?? YYYWW
+
+# Invalid cases - contradictory to previous hints
+# Y -> G for the same position, A at 2nd
+GACHI WYWWW
+EARLY WGWWW
+
+# G -> Y for the same position, B at 1st
+BILLY GWWWW
+BOCHI YWWWW

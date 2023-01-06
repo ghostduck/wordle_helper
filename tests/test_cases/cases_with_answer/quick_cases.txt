@@ -1,0 +1,10 @@
+# All lines starting with # are ignored.
+# These test cases are quick cases I can think of to try/prove/test something.
+
+# Test multiple letters cases
+=XXBXX
+BB??? YWWWW
+# Actually WYWWW is also correct too, but our program will produce YWWWW
+
+=XXBBX
+BB??? YYWWW

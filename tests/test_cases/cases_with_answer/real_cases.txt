@@ -1,0 +1,56 @@
+# All lines starting with # are ignored.
+# These test cases are captured from real Wordle game I played.
+
+# Line start with '=' followed by a word indicates the beginning of a test case. That word is the correct answer.
+# Then we have 1-6 lines of guesses. Each guess contains the word we guessed and the outcome. They are separated by space.
+# Finally we have a blank line to indicate end of a case.
+
+# Test 1
+# RUPEE - After 3rd try, P is only possible at 3rd and "therefore" R is at 1st
+=RUPEE
+PRIDE YYWWG
+SPARE WYWYG
+CREPE WYYYG
+RUPEE GGGGG
+
+# Test 2
+# ROBIN - After 3rd try, R is only possible at 1st
+=ROBIN
+PRIDE WYYWW
+MIRTH WYYWW
+FLAIR WWWGY
+ROBIN GGGGG
+
+# Test 3
+# THRON - At 5th try, T should be the only possible at 1st letter
+=THORN
+PRIDE WYWWW
+ROACH YYWWY
+HUMOR YWWYY
+SHORT WGGGY
+THORN GGGGG
+
+# Test 4
+# NASTY - After 3rd try, N is only possible at 1st
+=NASTY
+PRIDE WWWWW
+FUNKY WWYWG
+CANNY WGYWG
+NASTY GGGGG
+
+# Test 5
+# GAMER - After 3rd try, M is only possible at 3rd then A is only possible at 2nd
+=GAMER
+PRIDE WYWWY
+MUTER YWWGG
+AMBER YYWGG
+LAMER WGGGG
+GAMER GGGGG
+
+# Test 6
+# STEAD - Show what will be possible after 3rd try (T at 2/3, E at 1/3,A at 1/4)
+=STEAD
+PRIDE WWWYY
+DEATH YYYYW
+TAXED YYWYG
+STEAD GGGGG
