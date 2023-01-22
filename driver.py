@@ -1,4 +1,19 @@
 from src.wordle_helper.console_print_helper import console_wordle_printline
+from src.wordle_helper.wordle_no_spoiler_helper import process_all_hints
+
+def read_cases_with_answers_from_file(path):
+    list_of_guesses = []
+
+    with open(path) as file:
+        for line in file:
+            line = line.strip()
+
+            # skip comment line and blank line
+            if (bool(line) and not line.startswith("#")):
+                guess, result = line.split(" ")
+                list_of_guesses.append((guess, result))
+
+    return list_of_guesses
 
 def main():
     test_input = [
@@ -10,6 +25,9 @@ def main():
 
     for word, color in test_input:
         console_wordle_printline(word, color)
+
+    lst = read_cases_with_answers_from_file("test_data.txt")
+    process_all_hints(lst)
 
 
 if __name__=="__main__":

@@ -1,0 +1,7 @@
+# All empty lines and lines start with # are ignored
+
+# RUPEE - After 3rd try, P is only possible at 3rd and "therefore" R is at 1st
+PRIDE YYWWG
+SPARE WYWYG
+CREPE WYYYG
+# RUPEE GGGGG
