@@ -27,7 +27,11 @@ def main():
         console_wordle_printline(word, color)
 
     lst = read_cases_with_answers_from_file("test_data.txt")
-    process_all_hints(lst)
+    gen = process_all_hints(lst)
+
+    print("gachiBASS")
+    print("Patterns for correct word: ", [s for s in gen])
+    print("done")
 
 
 if __name__=="__main__":

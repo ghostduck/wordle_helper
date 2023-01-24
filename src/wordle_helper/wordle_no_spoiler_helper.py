@@ -3,11 +3,12 @@
 WORDLE_LENGTH = 5
 MAX_TRY = 6  # Not strictly enforced here
 ALL_UPPER_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+UNKNOWN_MARK = "?"
 
 from collections import defaultdict
 from dataclasses import dataclass, field
-from typing import Dict, Set, List
-from itertools import combinations
+from typing import Dict, Set, List, Generator
+from itertools import combinations, product, chain
 
 @dataclass
 class OverallHint:
@@ -28,7 +29,7 @@ class OverallHint:
     # {"A": (min, max)} # min max is the letter count
     letter_min_max_counter: Dict[str, tuple[int, int]] = field(default_factory=defaultdict)
 
-    def generate_combinations(self) -> List[tuple[str, List]]:
+    def generate_combinations(self) -> Dict[str, List[tuple[int]]]:
         """Return a List of tuples. Each tuple contains the letter and combinations of possible positions for yellow hints guess as a list. So the list does not contain green positions.
 
         Note that if there are multiple yellow hints of the same letter, the combinations of that letter can be returned too.
@@ -52,9 +53,10 @@ class OverallHint:
                     del letter_min_count[letter]
 
         # combinations parts
+        # For individual letter exclusion, we have to exclude green hint and its yellow hints exclusion (Full - green - yw_hints[letter])
         full_length = [i for i in range(len(self.green_hints)) if i not in green_positions_to_exclude]
 
-        letter_combinations_lst = []
+        letter_combinations_dict = dict()
 
         for letter, letter_count in letter_min_count.items():
             positions_to_try = [i for i in full_length if i not in self.y_w_hint_excluded_position[letter]]
@@ -63,9 +65,42 @@ class OverallHint:
             if len(comb) == 0:
                 raise ValueError("Cannot generate valid combination for {}".format(letter))
 
-            letter_combinations_lst.append((letter,comb))
+            letter_combinations_dict[letter] = comb
 
-        return letter_combinations_lst
+        return letter_combinations_dict
+
+    # About generator hinting
+    # https://stackoverflow.com/questions/57363181/proper-use-generator-typing
+    def correct_pattern_gen(self) -> Generator[str, None, None]:
+        """The generator function which returns the correct patterns as string."""
+
+        # The idea: Simple looping + exclude same location seems to be the best
+        combs = self.generate_combinations()
+
+        pattern_count = 0
+        lst_of_letters = list(combs.keys())
+        lst_of_pos = combs.values()
+
+        # Reminder: Each small list contains tuples
+        # Each tuple may have more than multiple indicies and pattern is a tuple
+        for pattern in product(*lst_of_pos):
+            flattened_list = [i for i in chain.from_iterable(pattern)]
+            # TODO: Test multiple letter case !!!!!!
+            # Check all indices are unique or not by converting to set
+            if len(flattened_list) == len(set(flattened_list)):
+                pattern_count += 1
+
+                # Build the string - deepcopy from green hint, replace None with UNKNOWN_MARK
+                str_builder = self.green_hints[:]
+                str_builder = [l if l is not None else UNKNOWN_MARK for l in str_builder]
+
+                # Fill in string builder - combs.keys() and values() have same order
+                for i, pos in enumerate(pattern):
+                    letter = lst_of_letters[i]
+                    for p in pos:
+                        str_builder[p] = letter
+
+                yield "".join(str_builder)
 
 
 def letters_to_try(hint) -> list:
@@ -360,11 +395,8 @@ def process_all_hints(hints:List[tuple[str,str]]):
         else:
             merge_hint(accumulated_hints, o_h)
 
-
-    comb = accumulated_hints.generate_combinations()
-    print(comb)
-
-    return hints
+    patterns = accumulated_hints.correct_pattern_gen()
+    return patterns
 
 
 def add_round_hints():
