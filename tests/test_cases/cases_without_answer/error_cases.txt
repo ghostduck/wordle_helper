@@ -13,3 +13,20 @@ EARLY WGWWW
 # G -> Y for the same position, B at 1st
 BILLY GWWWW
 BOCHI YWWWW
+
+# W -> G for the same position, Y at 5th
+# Note that W -> Y and Y -> W is possible for multiple letters
+HAPPY WWWWW
+CRAZY WWWWG
+
+# G -> W for the same position, C at 4th
+DANCE WWWGW
+TRICK WWWWW
+
+# W -> Y, single letter, A at 3rd
+BLAZE WWWWW
+CRAZY WWYWW
+
+# Y -> W, single letter, S at 1st
+SURGE YWWWW
+SLIDE WWWWW
