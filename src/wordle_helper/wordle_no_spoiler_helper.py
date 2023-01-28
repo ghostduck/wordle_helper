@@ -14,7 +14,7 @@ from itertools import combinations, product, chain
 class OverallHint:
     """Class for accumulated hints."""
     # list of correct letters and None
-    # just treat this as the confimred (green) answers/letters of Wordle you can see on screen
+    # just treat this as the confirmed (green) answers/letters of Wordle you can see on screen
     green_hints: list = field(default_factory=list)
 
     # yellow/wrong hint about the positions to exclude
@@ -76,6 +76,7 @@ class OverallHint:
 
         # The idea: Simple looping + exclude same location seems to be the best
         combs = self.generate_combinations()
+        # print("Combs is like: ", combs)
 
         pattern_count = 0
         lst_of_letters = list(combs.keys())
@@ -91,8 +92,7 @@ class OverallHint:
                 pattern_count += 1
 
                 # Build the string - deepcopy from green hint, replace None with UNKNOWN_MARK
-                str_builder = self.green_hints[:]
-                str_builder = [l if l is not None else UNKNOWN_MARK for l in str_builder]
+                str_builder = self.str_builder_for_output()
 
                 # Fill in string builder - combs.keys() and values() have same order
                 for i, pos in enumerate(pattern):
@@ -102,12 +102,22 @@ class OverallHint:
 
                 yield "".join(str_builder)
 
+        # Still need to return a pattern even when there are no yellow hints
+        if pattern_count == 0:
+            yield "".join(self.str_builder_for_output())
 
-def letters_to_try(hint) -> list:
-    correct_letters_to_exclude = [letter.upper() for letter, (min_count, max_count) in hint.letter_min_max_counter.items() if min_count == max_count]
 
-    return [l for l in ALL_UPPER_LETTERS if l not in hint.wrong_letters and l not in correct_letters_to_exclude]
+    def str_builder_for_output(self) -> List[str]:
+        """Return a List to be used in str.join() showing the state of green hint letters.
 
+        We just deepcopy from green_hint and replace None with UNKNOWN_MARK.
+        """
+        return [l if l is not None else UNKNOWN_MARK for l in self.green_hints[:]]
+
+    def letters_for_unknown_guess(self) ->List[str]:
+        correct_letters_to_exclude = [letter.upper() for letter, (min_count, max_count) in self.letter_min_max_counter.items() if min_count == max_count]
+
+        return [l for l in ALL_UPPER_LETTERS if l not in self.wrong_letters and l not in correct_letters_to_exclude]
 
 
 def wordle_game_rule_check(guess, answer):
@@ -184,9 +194,20 @@ def wordle_game_rule_check(guess, answer):
 
 
 def generate_round_counter_info(guess, guess_result):
-    """Return a new dict of letter count based on input of guess and guess_result.
+    """Return a set and a new dict.
 
-    This result includes green hints.
+    Set: set of wrong letters.
+
+    Letter in this set strictly means min_count: 0 and max_count: 0.
+    So letters appear in this set should not appear in green hints and y_w_hint_exclude at all.
+
+    Dict: Letter count based on input of guess and guess_result.
+    Key: Letter
+    Value: Tuple of 2 integers.
+
+    Example: {"K": (1,3)}. This means K has min_count of 1 and max_count of 3 in correct guess.
+
+    This count dict includes green hints.
     """
 
     # Example of counter:
@@ -249,9 +270,9 @@ def generate_round_counter_info(guess, guess_result):
             cur_count, max_count = letter_min_max_counters[guess_letter]
             letter_min_max_counters[guess_letter] = (cur_count, cur_count)  # reduce max length to min/current length
 
-            # we will hint multiple letter guess with partial correct result later
-
+            # Exclusion of wrong positions in multiple letter guess case will be handled in generate_round_position_exclusion_info()
         else:
+            # Single letter wrong hint goes here
             wrong_letters.add(guess_letter)
 
     return wrong_letters, letter_min_max_counters
@@ -262,7 +283,7 @@ def generate_round_position_exclusion_info(guess, guess_result):
 
     The dictionary: y_w_hint_exclude
     - Indices: the letter of yellow hints
-    - Value: Set of positions of integers to exclude (0-based)
+    - Value: Set of positions of integers to exclude (0-based). This set checks the position of Wrong letters in multiple letter case
 
     The list: current_confirmed_green
     - Simply a list of None or letters at the correct position
@@ -335,23 +356,53 @@ def validate_round_hint(round_hint):
 
 def merge_hint(accumulated_hints, round_hint):
     for i, letter in enumerate(round_hint.green_hints):
+
+        acc_hint_letter = accumulated_hints.green_hints[i]
+        if acc_hint_letter is not None:
+            # Contradiction check: G -> Y
+            # Use dict.get() to return empty list for non-existing key so that part is False
+            if i in round_hint.y_w_hint_excluded_position.get(acc_hint_letter, []):
+                raise ValueError("Current yellow hint excludes position {} for letter {} but it was green before".format(i, acc_hint_letter))
+
+            # Contradiction check: G -> W
+            if acc_hint_letter in round_hint.wrong_letters:
+                raise ValueError("Current wrong hint excludes letter {} but it was green before".format(acc_hint_letter))
+
         # Do nothing when round hint letter is None
         # Otherwise: if acc_hint_letter is None, overwrite it (as we find new letter)
         #          - if acc_hint_letter is not None and different from current letter, raise error (inconsistent green hint)
-        acc_hint_letter = accumulated_hints.green_hints[i]
+
         if letter is not None and acc_hint_letter != letter:
+            # Contradiction check: Y -> G
+            if i in accumulated_hints.y_w_hint_excluded_position[letter]:
+                raise ValueError("Current round is green hint for letter {} at position {} but it was excluded before in yellow/wrong hint".format(letter, i))
+
+            # Contradiction check: W -> G
+            if letter in accumulated_hints.wrong_letters:
+                raise ValueError("Current round is green hint for letter {} at position {} but it was excluded before in wrong hint".format(letter, i))
+
             if acc_hint_letter is not None:
+                # Same green position but different letter: G -> G (different letter)
                 raise ValueError("Inconsistent green hint: current round letter {}, current accumulated hint {}, current index {}".format(letter, accumulated_hints.green_hints[i], i))
             else:
-                # cover case of acc.green_hint[i] is None (find new letter)
+                # find new letter (None -> New letter)
                 accumulated_hints.green_hints[i] = letter
 
-    # no validation, just add
-    # error will be checked when the combination is created
     for letter, s in round_hint.y_w_hint_excluded_position.items():
+        # Contradiction check: W -> Y
+        if letter in accumulated_hints.wrong_letters:
+            raise ValueError("Previously excluded wrong letter {} is now included in yellow hint.".format(letter))
+
+        # No special logic to check other than the contradiction above
+        # Other error will be checked when combinations cannot be created
         accumulated_hints.y_w_hint_excluded_position[letter] |= s
 
-    # just add, again...
+    # Contradiction check: Y -> W
+    for letter in round_hint.wrong_letters:
+        if letter in accumulated_hints.y_w_hint_excluded_position:
+            raise ValueError("Previously yellow hint letter {} is now included as wrong letter".format(letter))
+
+    # No special check other than the contradiction above for wrong_letters too
     accumulated_hints.wrong_letters |= round_hint.wrong_letters
 
     # just use stricter min/max count
@@ -381,6 +432,7 @@ def process_all_hints(hints:List[tuple[str,str]]):
     Output: ?????
 
     """
+    # TODO: Add additional info
     accumulated_hints = None
 
     for h in hints:
@@ -395,6 +447,8 @@ def process_all_hints(hints:List[tuple[str,str]]):
         else:
             merge_hint(accumulated_hints, o_h)
 
+    # TODO: move this to additional info
+    print("Letters for blind guess: ", "".join(accumulated_hints.letters_for_unknown_guess()))
     patterns = accumulated_hints.correct_pattern_gen()
     return patterns
 
@@ -443,8 +497,8 @@ def main():
     hint.wrong_letters |= {"G", "A"}
     print(hint)
 
-    should_try = ",".join(letters_to_try(hint))
-    print(should_try)
+    #should_try = ",".join(letters_to_try(hint))
+    #print(should_try)
 
     print("="*20)
     d,s = generate_round_counter_info("CREPE","WYYYG")
