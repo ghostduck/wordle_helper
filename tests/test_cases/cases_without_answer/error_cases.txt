@@ -1,32 +1,57 @@
+# All lines starting with # are ignored.
+# Line start with '=' indicate start of a case. Everything after = is treated as the description of case.
+
 # Invalid single round hint cases
-# 4G1Y - impossible, think that where can that Y fit
+# 4G1Y, single Y have no where to fit
+= 4G1Y - impossible
 BOCHI GGGGY
 
-# 3Y for same letter - impossible for >50% of same letter with Yellow output
+# impossible for >50% of same letter with Yellow output
+= 3Y for same letter
 MMM?? YYYWW
 
+# --------------------------------
+
 # Invalid cases - contradictory to previous hints
-# Y -> G for the same position, A at 2nd
+# About the cases involving Green cases: Don't forget user no need to force same correct Green letter in nomral mode
+# A at 2nd
+= Y -> G for the same position
 GACHI WYWWW
 EARLY WGWWW
 
-# G -> Y for the same position, B at 1st
+# B at 1st
+= G -> Y for the same position
 BILLY GWWWW
 BOCHI YWWWW
 
-# W -> G for the same position, Y at 5th
+# Y at 5th
 # Note that W -> Y and Y -> W is possible for multiple letters
+= W -> G for the same position
 HAPPY WWWWW
 CRAZY WWWWG
 
-# G -> W for the same position, C at 4th
+# C at 4th
+= G -> W for the same position
 DANCE WWWGW
 TRICK WWWWW
 
-# W -> Y, single letter, A at 3rd
+# A at 3rd
+= W -> Y, single letter
 BLAZE WWWWW
 CRAZY WWYWW
 
-# Y -> W, single letter, S at 1st
+# S at 1st
+= Y -> W, single letter
 SURGE YWWWW
 SLIDE WWWWW
+
+# ------------------------------------
+# Real cases
+# Error from wrong copy-pasting: F in 4th guess should be G but I wrongly modified as Y
+# So FLAIR at 5th guess should reports error as the F cannot be correct
+= FLAIR wrong copy-pasting case
+PRIDE WYYWW
+BIRTH WYYWW
+INFRA YWYYY
+FAIRY YYYYW
+FLAIR GGGGG

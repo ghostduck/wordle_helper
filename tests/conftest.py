@@ -7,34 +7,28 @@ pprint.pprint(sys.path)
 
 import pytest
 
-
-def get_test_file_full_path(request, rel_path):
-    # ugly hack on PATH problem
-    # Get hints from https://stackoverflow.com/questions/50815777/parametrize-the-test-based-on-the-list-test-data-from-a-json-file
-
-    # Tried these:
-    # request.node.fspath.strpath   - "/full/path/to/tests/conftest.py"
-    # request.node.fspath.dirpath() - /full/path/to/tests , without the closing '/'
-
-    # Strangely enough I cannot use request.node.fspath.dirpath() + "/" to form the path. The '/' will be removed
-    # But it works for str(request.node.fspath.dirpath()) + "/"
-    dir_full_path = str(request.node.fspath.dirpath()) + "/"
-    return dir_full_path + rel_path
+fixture_mapping = [
+    ("real_cases_with_answer", "test_cases/cases_with_answer/real_cases.txt"),
+    ("quick_cases_with_answer", "test_cases/cases_with_answer/quick_cases.txt"),
+    ("error_cases", "test_cases/cases_without_answer/error_cases.txt")
+]
 
 
-@pytest.fixture
-def real_cases_with_answer(request):
-    rela_path_to_file = "test_cases/cases_with_answer/real_cases.txt"
-    full_path = get_test_file_full_path(request, rela_path_to_file)
+def pytest_generate_tests(metafunc):
+    # Assume running the test from top-level in directory, so "tests/test_cases/..." is readable
+    for fixture_name, fixture_path in fixture_mapping:
+        if fixture_name in metafunc.fixturenames:
+            metafunc.parametrize(fixture_name, read_cases_with_answers_from_file("tests/" + fixture_path), ids=get_real_case_id)
 
-    return read_cases_with_answers_from_file(full_path)
+def get_real_case_id(t):
+    # t = ("correct answer", (guesses))
+    # Like a static varible in C
+    try:
+        get_real_case_id.case_counter += 1
+    except AttributeError:
+        get_real_case_id.case_counter = 1
 
-@pytest.fixture
-def quick_cases_with_answer(request):
-    rela_path_to_file = "test_cases/cases_with_answer/quick_cases.txt"
-    full_path = get_test_file_full_path(request, rela_path_to_file)
-
-    return read_cases_with_answers_from_file(full_path)
+    return str(get_real_case_id.case_counter) + "-" + t[0]
 
 
 def read_cases_with_answers_from_file(path):
@@ -73,7 +67,8 @@ def read_cases_with_answers_from_file(path):
                         guesses = ()  # just like guesses.clear() but it is a tuple
                         answer = ""
 
-                    answer = line[1:]
+                    # also can be used as case description
+                    answer = line[1:].strip()  # use strip to remove meaningless spaces
 
                 else:
                     # assume to be guesses line
