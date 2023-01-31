@@ -5,8 +5,6 @@ MAX_TRY = 6  # Not strictly enforced here
 ALL_UPPER_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 UNKNOWN_MARK = "?"
 
-# TODO: about W error cases: change way to check counter - don't want multiple if checking on green and yellow hint
-
 from collections import defaultdict
 from dataclasses import dataclass, field
 from typing import Dict, Set, List, Generator
@@ -246,43 +244,51 @@ def generate_round_position_exclusion_info(guess, guess_result):
 
     return current_confirmed_green, y_w_hint_exclude
 
+def cross_check_wrong_hints(hint1, hint2):
+    """Raise if hint1's green/yellow hint letters are in hint2's wrong letter set.
+
+    This check is useful when they are both refering to the same correct answer.
+
+    Note that for all letters, it can be either part of the correct answer (G/Y) or not (W).
+    So if any letters are found in both part, there must be an error.
+    """
+
+    for letter in hint2.wrong_letters:
+        if letter in hint1.y_w_hint_excluded_position or letter in hint1.green_hints:
+            raise ValueError("Letter {} failed wrong hint cross check".format(letter))
+
 
 def verify_contradiction(accumulated_hints, round_hint):
-    for i, letter in enumerate(round_hint.green_hints):
+    """Raise if contradiction of 2 hints are found.
 
-        acc_hint_letter = accumulated_hints.green_hints[i]
+    Both hint are expected to refer to the same correct word.
+
+    We assume the accumulated_hints have the correct information.
+    """
+    for i, (acc_hint_letter, round_hint_letter) in enumerate(zip(accumulated_hints.green_hints, round_hint.green_hints, strict=True)):
+
         if acc_hint_letter is not None:
-            # Contradiction check: G -> Y
+            # There are nothing to verify if we don't know the correct for this position for both accumulated and round hint
+
+            # G -> Y (same position)
             # Use dict.get() to return empty list for non-existing key so that part is False
             if i in round_hint.y_w_hint_excluded_position.get(acc_hint_letter, []):
                 raise ValueError("Current yellow hint excludes position {} for letter {} but it was green before".format(i, acc_hint_letter))
 
-            # Contradiction check: G -> W
-            if acc_hint_letter in round_hint.wrong_letters:
-                raise ValueError("Current wrong hint excludes letter {} but it was green before".format(acc_hint_letter))
-
-        if letter is not None and acc_hint_letter != letter:
-            # Contradiction check: Y -> G
-            if i in accumulated_hints.y_w_hint_excluded_position[letter]:
-                raise ValueError("Current round is green hint for letter {} at position {} but it was excluded before in yellow/wrong hint".format(letter, i))
-
-            # Contradiction check: W -> G
-            if letter in accumulated_hints.wrong_letters:
-                raise ValueError("Current round is green hint for letter {} at position {} but it was excluded before in wrong hint".format(letter, i))
+        # Not equal is expected if acc_hint_letter is None (case of getting new green letter)
+        if round_hint_letter is not None and acc_hint_letter != round_hint_letter:
+            # Y -> G (same position)
+            if i in accumulated_hints.y_w_hint_excluded_position[round_hint_letter]:
+                raise ValueError("Current round is green hint for letter {} at position {} but it was excluded before in yellow/wrong hint".format(round_hint_letter, i))
 
             if acc_hint_letter is not None:
-                # Same green position but different letter: G -> G (different letter)
-                raise ValueError("Inconsistent green hint: current round letter {}, current accumulated hint {}, current index {}".format(letter, accumulated_hints.green_hints[i], i))
+                # G -> G (Same position, different letter)
+                raise ValueError("Inconsistent green hint: current round letter {}, current accumulated hint {}, current index {}".format(round_hint_letter, accumulated_hints.green_hints[i], i))
 
-    for letter, s in round_hint.y_w_hint_excluded_position.items():
-        # Contradiction check: W -> Y
-        if letter in accumulated_hints.wrong_letters:
-            raise ValueError("Previously excluded wrong letter {} is now included in yellow hint.".format(letter))
-
-    # Contradiction check: Y -> W
-    for letter in round_hint.wrong_letters:
-        if letter in accumulated_hints.y_w_hint_excluded_position:
-            raise ValueError("Previously yellow hint letter {} is now included as wrong letter".format(letter))
+        # G/Y -> W
+        cross_check_wrong_hints(accumulated_hints, round_hint)
+        # W -> G/Y
+        cross_check_wrong_hints(round_hint, accumulated_hints)
 
 
 def random_thoughts():
@@ -382,6 +388,7 @@ def process_all_hints(hints:List[tuple[str,str]]):
         else:
             verify_contradiction(accumulated_hints, o_h)
             merge_hint(accumulated_hints, o_h)
+            validate_round_hint(accumulated_hints)
 
     # TODO: move this to additional info
     print("Letters for blind guess: ", "".join(accumulated_hints.letters_for_unknown_guess()))
