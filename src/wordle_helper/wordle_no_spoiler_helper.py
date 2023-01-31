@@ -360,10 +360,10 @@ def check_hint_is_hard_compatible(accumulated_hints:OverallHint, round_hint:Over
 def process_all_hints(hints:List[tuple[str,str]], unknown_mark:str=UNKNOWN_MARK):
     """The main part of the module. Return the generator with additional data of the Wordle guesses.
 
-    Input: List of tuples.
+    Input: List of tuples. (Tuple of tuples are OK too)
     Each tuple has 2 strings - first is letter gussed and second is the result (Y/G/W)
 
-    Output: ?????
+    Output: Generator of correct patterns (as strings) and dictionary of additional information.
 
     """
     accumulated_hints = None
@@ -388,6 +388,7 @@ def process_all_hints(hints:List[tuple[str,str]], unknown_mark:str=UNKNOWN_MARK)
             if is_hard_mode_compatible:
                 is_hard_mode_compatible = check_hint_is_hard_compatible(accumulated_hints, o_h)
 
+    # All hints are processed
     patterns = accumulated_hints.correct_pattern_gen(unknown_mark)
 
     # for additional info only
