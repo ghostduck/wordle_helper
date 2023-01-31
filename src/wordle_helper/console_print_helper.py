@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+from typing import List
 import curses
 
 def choose_colour_str_method():
@@ -116,12 +117,12 @@ def console_wordle_printline(word, wordle_bg):
     print(output)
 
 
-def print_capital_letters_like_keyboard_layout(letters_to_print:str, hidden_letter_display:str="_", space_separate_length:int=1):
-    """Print letters_to_print in a keyboard-like output to standard output.
+def print_capital_letters_like_keyboard_layout(letters_to_print:List[str], hidden_letter_display:str="_", space_separate_length:int=1):
+    """Print letters_to_print (A list of str of letters) in a keyboard-like output to standard output.
 
     Can customize the hidden_letter_display and space length for letter separation.
 
-    Example: letters_to_print="CQS" (hidden_letter_display="_", space_separate_length=1)
+    Example: letters_to_print=[C,Q,S] (hidden_letter_display="_", space_separate_length=1)
 
     Then we print:
     Q _ _ _ _ _ _ _ _ _ _
@@ -130,7 +131,7 @@ def print_capital_letters_like_keyboard_layout(letters_to_print:str, hidden_lett
 
     """
 
-    letters_to_print = letters_to_print.upper()
+    letters_to_print = "".join(letters_to_print).upper()
     keyboard_layout = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"]  # length: 10,9,7
     keyboard_layout_length = [len(k_l) for k_l in keyboard_layout]
 
