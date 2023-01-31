@@ -7,10 +7,11 @@ pprint.pprint(sys.path)
 
 import pytest
 
+# The second boolean means that first line of "=" is description if True
 fixture_mapping = [
-    ("real_cases_with_answer",False, "test_cases/cases_with_answer/real_cases.txt"),
-    ("quick_cases_with_answer",False, "test_cases/cases_with_answer/quick_cases.txt"),
-    ("error_cases",True, "test_cases/cases_without_answer/error_cases.txt")
+    ("real_cases_with_answer",False,"test_cases/cases_with_answer/real_cases.txt"),
+    ("quick_cases_with_answer",False,"test_cases/cases_with_answer/quick_cases.txt"),
+    ("error_cases",True,"test_cases/cases_without_answer/error_cases.txt")
 ]
 
 
@@ -28,7 +29,7 @@ def get_real_case_id(t):
     except AttributeError:
         get_real_case_id.case_counter = 1
 
-    return str(get_real_case_id.case_counter) + "-" + t[0]
+    return str(get_real_case_id.case_counter) + ":" + t[0]
 
 
 def read_cases_with_answers_from_file(path, isDescription=False):

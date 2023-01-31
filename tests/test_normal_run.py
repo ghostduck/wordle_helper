@@ -3,8 +3,11 @@ import pytest
 
 from wordle_helper.wordle_no_spoiler_helper import process_all_hints
 
+# To be honest I should really create a case manually and get the possible combinations by hand. But I am too lazy... So I copy the output instead. Hopefully my (simple) algorithm is correct and therefore the output and the test is correct.
+
 rupee_test = [
     # Possible patterns: REP?E, R?PEE
+    # P must be at 3rd therefore R at 1st only
     ("PRIDE","YYWWG"),
     ("SPARE","WYWYG"),
     ("CREPE","WYYYG"),

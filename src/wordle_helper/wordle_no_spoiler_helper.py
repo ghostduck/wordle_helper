@@ -367,7 +367,6 @@ def process_all_hints(hints:List[tuple[str,str]], unknown_mark:str=UNKNOWN_MARK)
 
     """
     accumulated_hints = None
-    additional_info = dict()
 
     is_hard_mode_compatible = True
 
@@ -392,6 +391,7 @@ def process_all_hints(hints:List[tuple[str,str]], unknown_mark:str=UNKNOWN_MARK)
     patterns = accumulated_hints.correct_pattern_gen(unknown_mark)
 
     # for additional info only
+    additional_info = dict()
     additional_info["letters_for_unknown_guess"] = accumulated_hints.letters_for_unknown_guess()
     additional_info["is_hard_mode_compatible"] = is_hard_mode_compatible
     additional_info["is_normal_wordle_game"] = len(accumulated_hints.green_hints) == WORDLE_LENGTH and len(hints) <= MAX_TRY
