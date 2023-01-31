@@ -10,15 +10,6 @@ BOCHI GGGGY
 = 3Y for same letter
 MMM?? YYYWW
 
-# First hint shows only 1 M but second hint show 2 or more is correct
-= Contradictory number of letters 1
-MM??? YWWWW
-???MM WWWGG
-
-= Contradictory number of letters 2
-MM??? YWWWW
-??M?M WWGWY
-
 # --------------------------------
 
 # Invalid cases - contradictory to previous hints
@@ -53,6 +44,15 @@ CRAZY WWYWW
 = Y->W, single letter
 SURGE YWWWW
 SLIDE WWWWW
+
+# First hint shows only 1 M but second hint show 2 or more is correct
+= Contradictory number of letters 1
+MM??? YWWWW
+???MM WWWGG
+
+= Contradictory number of letters 2
+MM??? YWWWW
+??M?M WWGWY
 
 # ------------------------------------
 # Real cases
