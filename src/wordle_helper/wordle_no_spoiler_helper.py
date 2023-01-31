@@ -244,6 +244,7 @@ def generate_round_position_exclusion_info(guess, guess_result):
 
     return current_confirmed_green, y_w_hint_exclude
 
+
 def cross_check_wrong_hints(hint1, hint2):
     """Raise if hint1's green/yellow hint letters are in hint2's wrong letter set.
 
@@ -298,43 +299,10 @@ def verify_contradiction(accumulated_hints, round_hint):
                 raise ValueError("Number of letters of {} is contradictory to accumulated hint - must be between {} to {}".format(letter, acc_min, acc_max))
 
 
-def random_thoughts():
-    pass
-
-    # how to handle invalid round-hint - like 4G1Y
-
-    # multiple letter (considering all letters), Yellow -> Hint of minimum amount of letter, and multiple position to exclude
-    # single letter, Yellow -> Hint of minimum amount of letter, and position to exclude
-    # multiple letter (considering all letters), Wrong -> Tell us the maximum amount of letter, and multiple position to exclude, and should exclude from blind guess
-    # single letter, Wrong -> Maximum amount of that letter is 0. Should exclude from blind guess
-
-    # Green hint: Letter is in correct position
-    # Need to remove from free positions
-
-    # Yellow hint: Letter is in the word but wrong position
-    # So each yellow hint is telling us to exclude from that position
-
-    # Black/Wrong hint: Exclude from universal option
-    # This is the same even for the case of this:
-    # Correct answer is AAXYZ, we try X???X? - 1X will be yellow, other X will be wrong
-    # For this case, we also need to exclude the position for yellow hint as well
-
-    # hint promotion from yellow to green - we can safely delete that yellow hint. We can just create another yellow hint for multi-letter case
-
-    # free positions -> will be removed by green hint
-    # yellow hint positions
-    # Example: BBXYZ, 3 rounds of input
-    # ??B?? - B is yellow
-    # ?B??? - B hint can be promoted to green(but we still need to remember 3 is the location to exclude)
-    # ?B??B - 2nd B is yellow - we need to exclude B from position 2,3,5 (3 from previous records, 2 from green hint, 5 from yellow hint)
-
-    # ---- Similar case but do both at the same time ---
-    # ??B?? - B is yellow
-    # ?B?B? - One B hint green and another B hint yellow
-
 def validate_round_hint(round_hint):
     # Exception will be raised if combination cannot be generated
     round_hint.generate_combinations()
+
 
 def merge_hint(accumulated_hints, round_hint):
     # Assume no contradictions since already checked in other functions
@@ -371,6 +339,7 @@ def generate_round_data(guess, guess_result):
 
     return green_hints, y_w_hint_excluded_position, wrong_letters, letter_min_max_counter
 
+
 def process_all_hints(hints:List[tuple[str,str]], unknown_mark:str=UNKNOWN_MARK):
     """The main part of the module. Return the generator with additional data of the Wordle guesses.
 
@@ -403,10 +372,6 @@ def process_all_hints(hints:List[tuple[str,str]], unknown_mark:str=UNKNOWN_MARK)
     return patterns
 
 
-def add_round_hints():
-    pass
-
-
 def basic_hint_check(guess, guess_result):
     if len(guess) != len(guess_result):
         raise ValueError("guess and guess_result have different length.")
@@ -430,31 +395,3 @@ def verify_hints(guess, guess_result):
     """
 
     basic_hint_check(guess, guess_result)  # length and WGY only
-
-    # Then check the logic
-
-
-
-def show_permutation():
-    pass
-
-def main():
-    hint = OverallHint()
-    print(hint)
-
-    #hint.wrong_letters.add("G")
-    #hint.wrong_letters.add("A")
-    hint.wrong_letters |= {"G", "A"}
-    print(hint)
-
-    #should_try = ",".join(letters_to_try(hint))
-    #print(should_try)
-
-    print("="*20)
-    d,s = generate_round_counter_info("CREPE","WYYYG")
-    print(d)
-    print(s)
-
-
-if __name__=="__main__":
-    main()
