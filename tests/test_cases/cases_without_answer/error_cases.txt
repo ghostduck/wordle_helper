@@ -10,38 +10,47 @@ BOCHI GGGGY
 = 3Y for same letter
 MMM?? YYYWW
 
+# First hint shows only 1 M but second hint show 2 or more is correct
+= Contradictory number of letters 1
+MM??? YWWWW
+???MM WWWGG
+
+= Contradictory number of letters 2
+MM??? YWWWW
+??M?M WWGWY
+
 # --------------------------------
 
 # Invalid cases - contradictory to previous hints
 # About the cases involving Green cases: Don't forget user no need to force same correct Green letter in nomral mode
 # A at 2nd
-= Y -> G for the same position
+= Y->G for the same position
 GACHI WYWWW
 EARLY WGWWW
 
 # B at 1st
-= G -> Y for the same position
+= G->Y for the same position
 BILLY GWWWW
 BOCHI YWWWW
 
 # Y at 5th
 # Note that W -> Y and Y -> W is possible for multiple letters
-= W -> G for the same position
+= W->G for the same position
 HAPPY WWWWW
 CRAZY WWWWG
 
 # C at 4th
-= G -> W for the same position
+= G->W for the same position
 DANCE WWWGW
 TRICK WWWWW
 
 # A at 3rd
-= W -> Y, single letter
+= W->Y, single letter
 BLAZE WWWWW
 CRAZY WWYWW
 
 # S at 1st
-= Y -> W, single letter
+= Y->W, single letter
 SURGE YWWWW
 SLIDE WWWWW
 

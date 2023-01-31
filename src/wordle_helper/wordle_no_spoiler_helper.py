@@ -290,6 +290,13 @@ def verify_contradiction(accumulated_hints, round_hint):
         # W -> G/Y
         cross_check_wrong_hints(round_hint, accumulated_hints)
 
+    # Check length
+    for letter, (min_len, _) in round_hint.letter_min_max_counter.items():
+        if letter in accumulated_hints.letter_min_max_counter:
+            acc_min, acc_max = accumulated_hints.letter_min_max_counter[letter]
+            if min_len not in range(acc_min, acc_max):
+                raise ValueError("Number of letters of {} is contradictory to accumulated hint - must be between {} to {}".format(letter, acc_min, acc_max))
+
 
 def random_thoughts():
     pass
