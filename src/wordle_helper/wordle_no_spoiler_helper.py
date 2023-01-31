@@ -340,6 +340,23 @@ def generate_round_data(guess:str, guess_result:str):
     return green_hints, y_w_hint_excluded_position, wrong_letters, letter_min_max_counter
 
 
+def check_hint_is_hard_compatible(accumulated_hints:OverallHint, round_hint:OverallHint):
+    # First check all green hints in accumulated_hints are followed or not
+    for acc_hint_letter, round_hint_letter in zip(accumulated_hints.green_hints, round_hint.green_hints, strict=True):
+        if acc_hint_letter is not None and round_hint_letter != acc_hint_letter:
+            return False
+
+
+    # Then check all yellow hints in accumulated_hints are used or not: check the min_length is in range of accumulated_hints.letter_min_max_counter[yellow_letter]
+    for letter in accumulated_hints.y_w_hint_excluded_position:
+        current_hint_letter_count = round_hint.letter_min_max_counter.get(letter,(0,0))[0]
+
+        acc_min, acc_max =  accumulated_hints.letter_min_max_counter[letter]
+        if current_hint_letter_count not in range(acc_min, acc_max+1):
+            return False
+
+    return True
+
 def process_all_hints(hints:List[tuple[str,str]], unknown_mark:str=UNKNOWN_MARK):
     """The main part of the module. Return the generator with additional data of the Wordle guesses.
 
@@ -349,8 +366,10 @@ def process_all_hints(hints:List[tuple[str,str]], unknown_mark:str=UNKNOWN_MARK)
     Output: ?????
 
     """
-    # TODO: Add additional info
     accumulated_hints = None
+    additional_info = dict()
+
+    is_hard_mode_compatible = True
 
     for h in hints:
         verify_hints(*h)
@@ -366,10 +385,18 @@ def process_all_hints(hints:List[tuple[str,str]], unknown_mark:str=UNKNOWN_MARK)
             merge_hint(accumulated_hints, o_h)
             validate_round_hint(accumulated_hints)
 
-    # TODO: move this to additional info
-    print("Letters for blind guess: ", "".join(accumulated_hints.letters_for_unknown_guess()))
+            # for additional info only
+            if is_hard_mode_compatible:
+                is_hard_mode_compatible = check_hint_is_hard_compatible(accumulated_hints, o_h)
+
     patterns = accumulated_hints.correct_pattern_gen(unknown_mark)
-    return patterns
+
+    # for additional info only
+    additional_info["letters_for_unknown_guess"] = accumulated_hints.letters_for_unknown_guess()
+    additional_info["is_hard_mode_compatible"] = is_hard_mode_compatible
+    additional_info["is_normal_wordle_game"] = len(accumulated_hints.green_hints) == WORDLE_LENGTH and len(hints) <= MAX_TRY
+
+    return patterns, additional_info
 
 
 def basic_hint_check(guess, guess_result):

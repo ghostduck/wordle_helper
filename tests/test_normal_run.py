@@ -48,7 +48,7 @@ def test_generate_correct_pattern(test_input, expected):
     # Order in each expected output does not matter
     # They are output from generator. But I expect no duplicate from it.
     # So do not convert them to a set
-    gen = process_all_hints(test_input, unknown_mark="*")
+    gen, _ = process_all_hints(test_input, unknown_mark="*")
     pattern_output_lst = [s for s in gen]
 
     pattern_output_lst.sort()
