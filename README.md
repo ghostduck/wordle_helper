@@ -6,6 +6,88 @@ No list of words are used. Only show the pattern from the hints from guesses.
 
 The only external dependency is `pytest` for testing only.
 
+## Sample run on driver program (Console, Standard output)
+
+You can just add more cases in `test_data.txt` to show the correct pattern and letters for blind guess of a Wordle game.
+
+Each case is separated with a blank line.
+
+Example:
+
+```txt
+# All empty lines and lines start with # are ignored.
+# Empty line after a case indicate end of a set data.
+PRIDE WYYWW
+BIRTH WYYWW
+INFRA YWYYY
+
+PRIDE YYWWG
+SPARE WYWYG
+CREPE WYYYG
+```
+
+These are 2 sets of data of 2 Wordle games.
+
+Output of the sample driver program - Note that first few lines after each run are the colored output of the Wordle state (G/Y/W in background). The colour cannot be shown in this README file.
+
+```txt
+============== Run #1 ===========
+PRIDE
+BIRTH
+INFRA
+{'is_hard_mode_compatible': True, 'is_normal_wordle_game': True}
+Letters for blind guess:
+ Q W _ R _ Y U I O _
+  A S _ F G _ J K L
+    Z X C V _ _ M
+Patterns for correct word:  ['RFAI*', 'RA*IF', 'R*AIF', 'RFA*I', 'RF*AI', 'RA*FI', 'R*AFI', 'FA*IR', 'F*AIR', 'AF*IR', '*FAIR']
+============= End of Run #1 ============
+
+============== Run #2 ===========
+PRIDE
+SPARE
+CREPE
+{'is_hard_mode_compatible': True, 'is_normal_wordle_game': True}
+Letters for blind guess:
+ Q W E R T Y U _ O P
+  _ _ _ F G H J K L
+    Z X _ V B N M
+Patterns for correct word:  ['REP*E', 'R*PEE']
+============= End of Run #2 ============
+```
+
+## Expected way to use the module
+
+The smallest working example:
+
+```python
+from src.wordle_helper.wordle_no_spoiler_helper import process_all_hints
+
+# outer level can be a list or tuple
+in_data1 = (
+    ("PRIDE","YYWWG"),
+    ("SPARE","WYWYG"),
+    ("CREPE","WYYYG"),
+)
+gen, _ = process_all_hints(in_data1, unknown_mark="*")
+print("Patterns for correct word: ", [s for s in gen])
+
+in_data2 = [
+    ("PRIDE", "WYWWY"),
+    ("MUTER", "YWWGG"),
+    ("AMBER", "YYWGG"),
+]
+gen, _ = process_all_hints(in_data2, unknown_mark="*")
+print("Patterns for correct word: ", [s for s in gen])
+```
+
+The output:
+
+```txt
+Patterns for correct word:  ['REP*E', 'R*PEE']
+Patterns for correct word:  ['*AMER']
+```
+
 ## Run the test
 
 We need to setup the environment to run the test first. Assume we use `venv`.
@@ -51,4 +133,5 @@ $ python3 -m pytest
 $ pytest --capture=no     # show print statements in console
 $ pytest -s               # equivalent to previous command
 
+$ pytest -v  # show more details on test
 ```
