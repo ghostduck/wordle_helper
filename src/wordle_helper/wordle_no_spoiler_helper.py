@@ -71,7 +71,7 @@ class OverallHint:
 
     # About generator hinting
     # https://stackoverflow.com/questions/57363181/proper-use-generator-typing
-    def correct_pattern_gen(self) -> Generator[str, None, None]:
+    def correct_pattern_gen(self, unknown_mark:str=UNKNOWN_MARK) -> Generator[str, None, None]:
         """The generator function which returns the correct patterns as string."""
 
         # The idea: Simple looping + exclude same location seems to be the best
@@ -86,13 +86,13 @@ class OverallHint:
         # Each tuple may have more than multiple indicies and pattern is a tuple
         for pattern in product(*lst_of_pos):
             flattened_list = [i for i in chain.from_iterable(pattern)]
-            # TODO: Test multiple letter case !!!!!!
+
             # Check all indices are unique or not by converting to set
             if len(flattened_list) == len(set(flattened_list)):
                 pattern_count += 1
 
                 # Build the string - deepcopy from green hint, replace None with UNKNOWN_MARK
-                str_builder = self.str_builder_for_output()
+                str_builder = self.str_builder_for_output(unknown_mark)
 
                 # Fill in string builder - combs.keys() and values() have same order
                 for i, pos in enumerate(pattern):
@@ -104,15 +104,15 @@ class OverallHint:
 
         # Still need to return a pattern even when there are no yellow hints
         if pattern_count == 0:
-            yield "".join(self.str_builder_for_output())
+            yield "".join(self.str_builder_for_output(unknown_mark))
 
 
-    def str_builder_for_output(self) -> List[str]:
+    def str_builder_for_output(self, unknown_mark:str=UNKNOWN_MARK) -> List[str]:
         """Return a List to be used in str.join() showing the state of green hint letters.
 
         We just deepcopy from green_hint and replace None with UNKNOWN_MARK.
         """
-        return [l if l is not None else UNKNOWN_MARK for l in self.green_hints[:]]
+        return [l if l is not None else unknown_mark for l in self.green_hints[:]]
 
     def letters_for_unknown_guess(self) ->List[str]:
         correct_letters_to_exclude = [letter.upper() for letter, (min_count, max_count) in self.letter_min_max_counter.items() if min_count == max_count]
@@ -364,7 +364,7 @@ def generate_round_data(guess, guess_result):
 
     return green_hints, y_w_hint_excluded_position, wrong_letters, letter_min_max_counter
 
-def process_all_hints(hints:List[tuple[str,str]]):
+def process_all_hints(hints:List[tuple[str,str]], unknown_mark:str=UNKNOWN_MARK):
     """The main part of the module. Return the generator with additional data of the Wordle guesses.
 
     Input: List of tuples.
@@ -392,7 +392,7 @@ def process_all_hints(hints:List[tuple[str,str]]):
 
     # TODO: move this to additional info
     print("Letters for blind guess: ", "".join(accumulated_hints.letters_for_unknown_guess()))
-    patterns = accumulated_hints.correct_pattern_gen()
+    patterns = accumulated_hints.correct_pattern_gen(unknown_mark)
     return patterns
 
 
