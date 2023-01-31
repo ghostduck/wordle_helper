@@ -1,7 +1,46 @@
+# The playaround file. I suggest adding your data to the bottom when you are really playing Wordle
+
 # All empty lines and lines start with # are ignored
+PRIDE WYYWW
+BIRTH WYYWW
+INFRA YWYYY
+#FAIRY GYYYW
+#FLAIR GGGGG
 
 # RUPEE - After 3rd try, P is only possible at 3rd and "therefore" R is at 1st
 PRIDE YYWWG
 SPARE WYWYG
 CREPE WYYYG
-# RUPEE GGGGG
+#RUPEE GGGGG
+
+# NASTY - After 3rd try, N is only possible at 1st
+PRIDE WWWWW
+FUNKY WWYWG
+CANNY WGYWG
+#NASTY GGGGG
+
+# GAMER - After 3rd try, M is only possible at 3rd then A is only possible at 2nd
+PRIDE WYWWY
+MUTER YWWGG
+AMBER YYWGG
+LAMER WGGGG
+#GAMER GGGGG
+
+# Show what will be possible after 3rd try (T at 2/3, E at 1/3,A at 1/4)
+PRIDE WWWYY
+DEATH YYYYW
+TAXED YYWYG
+#STEAD GGGGG
+
+# At 4th try, R should be the only possible at 1st letter
+PRIDE WYYWW
+MIRTH WYYWW
+FLAIR WWWGY
+#ROBIN GGGGG
+
+# At 5th try, T should be the only possible at 1st letter
+PRIDE WYWWW
+ROACH YYWWY
+HUMOR YWWYY
+SHORT WGGGY
+#THORN GGGGG
