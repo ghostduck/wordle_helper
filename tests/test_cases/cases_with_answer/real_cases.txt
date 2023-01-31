@@ -2,7 +2,7 @@
 # These test cases are captured from real Wordle game I played.
 
 # Line start with '=' followed by a word indicates the beginning of a test case. That word is the correct answer.
-# Then we have 1-6 lines of guesses. Each guess contains the word we guessed and the outcome. They are separated by space.
+# Then we have 1-6 lines of guesses. Each guess contains the word we guessed and the outcome (G/Y/W). They are separated by a space.
 # Finally we have a blank line to indicate end of a case.
 
 # Test 1

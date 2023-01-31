@@ -1,5 +1,5 @@
 # All lines starting with # are ignored.
-# Line start with '=' indicate start of a case. Everything after = is treated as the description of case.
+# Line start with '=' indicate start of a case. Everything after = is treated as the description of case. This description is shown when pytest -vvv is invoked.
 
 # Invalid single round hint cases
 # 4G1Y, single Y have no where to fit
@@ -9,6 +9,10 @@ BOCHI GGGGY
 # impossible for >50% of same letter with Yellow output
 = 3Y for same letter
 MMM?? YYYWW
+
+= Different length in rounds
+GACHI WWWWW
+GACHIBASS WWWWWGGGG
 
 # --------------------------------
 
