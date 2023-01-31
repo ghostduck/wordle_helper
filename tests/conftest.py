@@ -31,6 +31,15 @@ def get_real_case_id(t):
 
     return str(get_real_case_id.case_counter) + ":" + t[0]
 
+@pytest.fixture
+def rupee_case(request):
+    return [
+        # Possible patterns: REP?E, R?PEE
+        # P must be at 3rd therefore R at 1st only
+        ("PRIDE","YYWWG"),
+        ("SPARE","WYWYG"),
+        ("CREPE","WYYYG"),
+    ]
 
 def read_cases_with_answers_from_file(path, isDescription=False):
     list_of_cases = []
