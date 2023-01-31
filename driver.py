@@ -77,7 +77,7 @@ def main():
 
     lst = read_cases_with_answers_from_file("test_data.txt")
 
-    for i, hint in enumerate(lst):
+    for i, hint in enumerate(lst, start=1):
         print("============== Run #{} ===========".format(i))
         console_process_hint(hint)
         print("============= End of Run #{} ============\n".format(i))
