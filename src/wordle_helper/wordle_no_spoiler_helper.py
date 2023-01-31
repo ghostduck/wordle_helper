@@ -120,7 +120,7 @@ class OverallHint:
         return [l for l in ALL_UPPER_LETTERS if l not in self.wrong_letters and l not in correct_letters_to_exclude]
 
 
-def generate_round_counter_info(guess, guess_result):
+def generate_round_counter_info(guess:str, guess_result:str):
     """Return a set and a new dict.
 
     Set: set of wrong letters.
@@ -206,7 +206,7 @@ def generate_round_counter_info(guess, guess_result):
     return wrong_letters, letter_min_max_counters
 
 
-def generate_round_position_exclusion_info(guess, guess_result):
+def generate_round_position_exclusion_info(guess:str, guess_result:str):
     """Return a tuple consist of a list and a dictionary.
 
     The dictionary: y_w_hint_exclude
@@ -245,7 +245,7 @@ def generate_round_position_exclusion_info(guess, guess_result):
     return current_confirmed_green, y_w_hint_exclude
 
 
-def cross_check_wrong_hints(hint1, hint2):
+def cross_check_wrong_hints(hint1:OverallHint, hint2:OverallHint):
     """Raise if hint1's green/yellow hint letters are in hint2's wrong letter set.
 
     This check is useful when they are both refering to the same correct answer.
@@ -259,7 +259,7 @@ def cross_check_wrong_hints(hint1, hint2):
             raise ValueError("Letter {} failed wrong hint cross check".format(letter))
 
 
-def verify_contradiction(accumulated_hints, round_hint):
+def verify_contradiction(accumulated_hints:OverallHint, round_hint:OverallHint):
     """Raise if contradiction of 2 hints are found.
 
     Both hint are expected to refer to the same correct word.
@@ -299,12 +299,12 @@ def verify_contradiction(accumulated_hints, round_hint):
                 raise ValueError("Number of letters of {} is contradictory to accumulated hint - must be between {} to {}".format(letter, acc_min, acc_max))
 
 
-def validate_round_hint(round_hint):
+def validate_round_hint(round_hint:OverallHint):
     # Exception will be raised if combination cannot be generated
     round_hint.generate_combinations()
 
 
-def merge_hint(accumulated_hints, round_hint):
+def merge_hint(accumulated_hints:OverallHint, round_hint:OverallHint):
     # Assume no contradictions since already checked in other functions
     for i, letter in enumerate(round_hint.green_hints):
 
@@ -332,7 +332,7 @@ def merge_hint(accumulated_hints, round_hint):
             accumulated_hints.letter_min_max_counter[letter] = (new_min_count, new_max_count)
 
 
-def generate_round_data(guess, guess_result):
+def generate_round_data(guess:str, guess_result:str):
     green_hints, y_w_hint_excluded_position = generate_round_position_exclusion_info(guess, guess_result)
 
     wrong_letters, letter_min_max_counter = generate_round_counter_info(guess, guess_result)
@@ -385,7 +385,7 @@ def basic_hint_check(guess, guess_result):
 
     return True
 
-def verify_hints(guess, guess_result):
+def verify_hints(guess:str, guess_result:str):
     """Return True if the single round hint is valid on its own. Otherwise raise Exception.
 
     Valid means "nothing contradictory".Some invalid inputs are like 4G1Y, 3Y on same letter (when Wordle size is 5)
