@@ -114,3 +114,36 @@ def console_wordle_printline(word, wordle_bg):
         output += color_output_fn(letter, bg_color)
 
     print(output)
+
+
+def print_capital_letters_like_keyboard_layout(letters_to_print:str, hidden_letter_display:str="_", space_separate_length:int=1):
+    """Print letters_to_print in a keyboard-like output to standard output.
+
+    Can customize the hidden_letter_display and space length for letter separation.
+
+    Example: letters_to_print="CQS" (hidden_letter_display="_", space_separate_length=1)
+
+    Then we print:
+    Q _ _ _ _ _ _ _ _ _ _
+     _ S _ _ _ _ _ _ _
+      _ _ C _ _ _ _
+
+    """
+
+    letters_to_print = letters_to_print.upper()
+    keyboard_layout = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"]  # length: 10,9,7
+    keyboard_layout_length = [len(k_l) for k_l in keyboard_layout]
+
+    separator = " " * space_separate_length
+
+    # Display length calculation:
+    # 1 space before the first letter, 1 space after the last letter
+    # Longest row has n letters, we will need n-1 spaces to separate them
+    # So the display length will be [2 + ((max_row_length -1) * space_separate_length) + max_row_length ]
+    display_length = (max(keyboard_layout_length)-1) * space_separate_length + max(keyboard_layout_length) + 2
+
+    for k_l in keyboard_layout:
+        letters_to_display =  [l if l in letters_to_print else hidden_letter_display for l in k_l ]
+
+        out = separator.join(letters_to_display)
+        print(out.center(display_length))
