@@ -71,7 +71,7 @@ def test_normal_add_info_cases_from_fixtures(normal_case, request):
         (silly_test),
         (silly_test2),
     ],
-    ids=["silly1", "silly2"]
+    ids=["silly_waste_chance", "silly2"]
 )
 def test_normal_add_info_cases(normal_case):
     _, extra_info = process_all_hints(normal_case)

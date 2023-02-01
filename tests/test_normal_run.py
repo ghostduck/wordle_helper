@@ -14,6 +14,24 @@ rupee_test = [
 ]
 rupee_test_out = ["REP*E", "R*PEE"]
 
+silly_rupee_test = [
+    ("PRIDE","YYWWG"),
+    ("SPARE","WYWYG"),
+    ("RUPEE","GGGGG"),  # Silly fake case by adding the correct answer before last guess
+    ("CREPE","WYYYG"),
+]
+
+silly_rupee_test_out = ["RUPEE"]
+
+scold_test = [
+    ("CROSS","YWGYW"),
+    ("STOIC","GWGWY"),
+    ("SHOCK","GWGYW"),
+    #("SCOPE","GGGWW"),
+]
+
+scold_test_out = ["SCO**"]
+
 flair_test = [
     # Possible patterns: RFAI?, RA?IF, R?AIF, RFA?I, RF?AI, RA?FI, R?AFI, FA?IR, F?AIR, AF?IR, ?FAIR
     ("PRIDE", "WYYWW"),
@@ -44,9 +62,11 @@ gamer_test_out = ["*AMER"]
     (rupee_test, rupee_test_out),
     (flair_test, flair_test_out),
     (flair_test2, flair_test2_out),
-    (gamer_test, gamer_test_out)
+    (gamer_test, gamer_test_out),
+    (silly_rupee_test, silly_rupee_test_out),
+    (scold_test, scold_test_out),
 ],
-ids=["NORMAL_RUPEE", "NORMAL_FLAIR1", "NORMAL_FLAIR2", "NORMAL_GAMER"])
+ids=["NORMAL_RUPEE", "NORMAL_FLAIR1", "NORMAL_FLAIR2", "NORMAL_GAMER", "SILLY_RUPEE", "NORMAL_SCOLD"])
 def test_generate_correct_pattern(test_input, expected):
     # Order in each expected output does not matter
     # They are output from generator. But I expect no duplicate from it.
