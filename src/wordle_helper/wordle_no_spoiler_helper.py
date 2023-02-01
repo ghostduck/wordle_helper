@@ -351,8 +351,9 @@ def check_hint_is_hard_compatible(accumulated_hints:OverallHint, round_hint:Over
     for letter in accumulated_hints.y_w_hint_excluded_position:
         current_hint_letter_count = round_hint.letter_min_max_counter.get(letter,(0,0))[0]
 
-        acc_min, acc_max =  accumulated_hints.letter_min_max_counter[letter]
-        if current_hint_letter_count not in range(acc_min, acc_max+1):
+        acc_min, _ =  accumulated_hints.letter_min_max_counter[letter]
+        # it is a valid hard mode as long as the accumulated min count is followed
+        if not current_hint_letter_count >= acc_min:
             return False
 
     return True
