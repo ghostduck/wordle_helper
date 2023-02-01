@@ -295,8 +295,8 @@ def verify_contradiction(accumulated_hints:OverallHint, round_hint:OverallHint):
     for letter, (min_len, _) in round_hint.letter_min_max_counter.items():
         if letter in accumulated_hints.letter_min_max_counter:
             acc_min, acc_max = accumulated_hints.letter_min_max_counter[letter]
-            if min_len not in range(acc_min, acc_max):
-                raise ValueError("Number of letters of {} is contradictory to accumulated hint - must be between {} to {}".format(letter, acc_min, acc_max))
+            if min_len not in range(acc_min, acc_max+1):
+                raise ValueError("Number of letters of {} is contradictory to accumulated hint - must be between {} to {}. Current length is {}".format(letter, acc_min, acc_max, min_len))
 
 
 def validate_round_hint(round_hint:OverallHint):
