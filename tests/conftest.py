@@ -41,6 +41,16 @@ def rupee_case(request):
         ("CREPE","WYYYG"),
     ]
 
+@pytest.fixture
+def silly_cross_case(request):
+    return (
+        # Correct answer: SCOLD
+        # Waste a chance on purpose
+        # Also this shows the multi-letter guess of S - only 1 S in the answer
+        ("CROSS","YWGYW"),
+        ("CROSS","YWGYW"),
+    )
+
 def read_cases_with_answers_from_file(path, isDescription=False):
     list_of_cases = []
     answer_description = None

@@ -78,3 +78,9 @@ def test_normal_add_info_cases(normal_case):
 
     assert extra_info["is_hard_mode_compatible"] == True
     assert extra_info["is_normal_wordle_game"] == True
+
+
+def test_normal_letters_for_blind_guess_cases(silly_cross_case):
+    _, extra_info = process_all_hints(silly_cross_case)
+
+    assert "S" not in extra_info["letters_for_unknown_guess"]
