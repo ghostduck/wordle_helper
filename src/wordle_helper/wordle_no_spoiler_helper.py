@@ -18,7 +18,7 @@ class OverallHint:
     green_hints: list = field(default_factory=list)
 
     # yellow/wrong hint about the positions to exclude
-    # dict of letter to set of int (positions to exclude)
+    # dict of letter to set of int (positions to exclude, 0-based)
     y_w_hint_excluded_position: Dict[str, Set[int]] = field(default_factory=defaultdict)
 
     # letters hinted for wrong guesses only (single letter W or multi-letter all W)
@@ -30,20 +30,21 @@ class OverallHint:
     letter_min_max_counter: Dict[str, tuple[int, int]] = field(default_factory=defaultdict)
 
     def generate_combinations(self) -> Dict[str, List[tuple[int]]]:
-        """Return a List of tuples. Each tuple contains the letter and combinations of possible positions for yellow hints guess as a list. So the list does not contain green positions.
+        """Return a dict of letter to List. Each list contains combinations of possible positions (as a tuple of int) for yellow hints guess. It does not contain green positions.
 
-        Note that if there are multiple yellow hints of the same letter, the combinations of that letter can be returned too.
+        Note that if there are multiple yellow hints of the same letter (min_count >1), the combinations of that letter can be returned too.
 
-        For example: [
-            ("E", [(2,3),(2,4),(3,4)])  # When we have to exclude 0,1 and there are 2 min_count for "E"
-        ]
+        For example: {
+            "A" -> [(2,),(4,)],  # 1 min_count for A, exclude 0,1,3
+            "E" -> [(2,3),(2,4),(3,4)]  # When we have to exclude 0,1 and there are 2 min_count for "E"
+        }
 
         """
 
         letter_min_count = {letter: min_count for letter, (min_count, _) in self.letter_min_max_counter.items()}
         green_positions_to_exclude = []
 
-        # get count for letters for Y/W hints only
+        # Setup: Exclude green hints to get count for letters for Y/W hints
         for i, letter in enumerate(self.green_hints):
             if letter is not None:
                 letter_min_count[letter] -= 1
@@ -53,7 +54,8 @@ class OverallHint:
                     del letter_min_count[letter]
 
         # combinations parts
-        # For individual letter exclusion, we have to exclude green hint and its yellow hints exclusion (Full - green - yw_hints[letter])
+        # For individual letter exclusion, exclude green hint and then its yellow hints exclusion
+        # (Full - green - yw_hints[letter])
         full_length = [i for i in range(len(self.green_hints)) if i not in green_positions_to_exclude]
 
         letter_combinations_dict = dict()
@@ -62,12 +64,14 @@ class OverallHint:
             positions_to_try = [i for i in full_length if i not in self.y_w_hint_excluded_position[letter]]
             comb = [c for c in combinations(positions_to_try, letter_count)]
 
+            # Many invalid cases can be caught here when too many positions are excluded
             if len(comb) == 0:
-                raise ValueError("Cannot generate valid combination for {}".format(letter))
+                raise ValueError("Cannot generate valid combination for letter {}".format(letter))
 
             letter_combinations_dict[letter] = comb
 
         return letter_combinations_dict
+
 
     # About generator hinting
     # https://stackoverflow.com/questions/57363181/proper-use-generator-typing
@@ -85,6 +89,11 @@ class OverallHint:
         # Reminder: Each small list contains tuples
         # Each tuple may have more than multiple indicies and pattern is a tuple
         for pattern in product(*lst_of_pos):
+            # pattern is one of the Cartesian product of all the possible
+            # positions of all the yellow/wrong hint letters
+            # pattern = ((1,), (2,), (3,4,),)
+
+            # put all the ints inside tuples together as a list, flatten using chain
             flattened_list = [i for i in chain.from_iterable(pattern)]
 
             # Check all indices are unique or not by converting to set
@@ -114,9 +123,12 @@ class OverallHint:
         """
         return [l if l is not None else unknown_mark for l in self.green_hints[:]]
 
+
     def letters_for_unknown_guess(self) ->List[str]:
+        #  the multiple case letters with G/W or Y/W hints
         correct_letters_to_exclude = [letter.upper() for letter, (min_count, max_count) in self.letter_min_max_counter.items() if min_count == max_count]
 
+        # =(ALL_UPPER_LETTERS - correct_letters that should not try - wrong letters)
         return [l for l in ALL_UPPER_LETTERS if l not in self.wrong_letters and l not in correct_letters_to_exclude]
 
 
@@ -138,7 +150,10 @@ def generate_round_counter_info(guess:str, guess_result:str):
     """
 
     # Example of counter:
-    #(min/current, max) -> default (1, WORDLE_LENGTH)
+    # known_max_length is only 5 for standard Wordle
+
+    #(min/current, max) -> default (1, known_max_length)
+
     # A (first letter) -> (1,5)
     # ---
     # B (another letter) -> (1,4) , A -> (1,4)
@@ -152,10 +167,11 @@ def generate_round_counter_info(guess:str, guess_result:str):
     # New green or yellow hint
     # - 1. existing same letter: min count of that letter +1
     # - 2. other letters: max - 1
-    # - 3. otherwise - create entry for current letter, (1, MAX-len(current_dict))
-    # New wrong hint (multiple letter) - must be processed after B/G hint
+    # - 3. otherwise - create entry for current letter, (1, MAX - number of letters used)
+
+    # !!! New wrong hint (multiple letter) - must be processed after B/G hint !!!
     # (watch out for case like ???B?, XXBBX, WWWGW) [W first, G later for 'B']
-    # for that letter - max = min (set upper limit)
+    # for that letter (B in example) - max = min (set upper limit)
     # Otherwise (wrong hint, single letter) - add to wrong letter
 
     letter_min_max_counters = dict()  # the min count includes green hints too
@@ -194,7 +210,7 @@ def generate_round_counter_info(guess:str, guess_result:str):
         guess_letter = guess[i]
 
         if guess_letter in letter_min_max_counters:
-            # Multiple letter case: Y/G and W together
+            # Multiple letter case: Y/W or G/W together
             cur_count, _ = letter_min_max_counters[guess_letter]
             letter_min_max_counters[guess_letter] = (cur_count, cur_count)  # reduce max length to min/current length
 
@@ -250,7 +266,7 @@ def cross_check_wrong_hints(hint1:OverallHint, hint2:OverallHint):
 
     This check is useful when they are both refering to the same correct answer.
 
-    Note that for all letters, it can be either part of the correct answer (G/Y) or not (W).
+    Note that for all letters, it can be either part of the correct answer (G/Y) or not part of answer (W).
     So if any letters are found in both part, there must be an error.
     """
 
@@ -295,6 +311,7 @@ def verify_contradiction(accumulated_hints:OverallHint, round_hint:OverallHint):
     for letter, (min_len, _) in round_hint.letter_min_max_counter.items():
         if letter in accumulated_hints.letter_min_max_counter:
             acc_min, acc_max = accumulated_hints.letter_min_max_counter[letter]
+            # Note: [range(1,1)] gives empty list, so don't forget +1 on max
             if min_len not in range(acc_min, acc_max+1):
                 raise ValueError("Number of letters of {} is contradictory to accumulated hint - must be between {} to {}. Current length is {}".format(letter, acc_min, acc_max, min_len))
 
@@ -326,8 +343,9 @@ def merge_hint(accumulated_hints:OverallHint, round_hint:OverallHint):
         if letter not in accumulated_hints.letter_min_max_counter:
             accumulated_hints.letter_min_max_counter[letter] = (min_count, max_count)
         else:
-            new_min_count = max(accumulated_hints.letter_min_max_counter[letter][0], min_count)
-            new_max_count = min(accumulated_hints.letter_min_max_counter[letter][1], max_count)
+            acc_min, acc_max = accumulated_hints.letter_min_max_counter[letter]
+            new_min_count = max(acc_min, min_count)
+            new_max_count = min(acc_max, max_count)
 
             accumulated_hints.letter_min_max_counter[letter] = (new_min_count, new_max_count)
 
@@ -341,17 +359,27 @@ def generate_round_data(guess:str, guess_result:str):
 
 
 def check_hint_is_hard_compatible(accumulated_hints:OverallHint, round_hint:OverallHint):
+    """Return True if:
+    1) all green hints in accumulated_hints are used and
+    2) all yellow hints in accumulated_hints are used. These hints end up as green or yellow hint in round hint.
+
+    Otherwise return False
+
+    The checking of 2) will be done using letter_min_max_counter.
+    """
+
     # First check all green hints in accumulated_hints are followed or not
     for acc_hint_letter, round_hint_letter in zip(accumulated_hints.green_hints, round_hint.green_hints, strict=True):
         if acc_hint_letter is not None and round_hint_letter != acc_hint_letter:
             return False
 
-
-    # Then check all yellow hints in accumulated_hints are used or not: check the min_length is in range of accumulated_hints.letter_min_max_counter[yellow_letter]
+    # Then check all yellow hints in accumulated_hints are used or not
     for letter in accumulated_hints.y_w_hint_excluded_position:
+        # prevent raising KeyNotFound - get 0 instead for this case
         current_hint_letter_count = round_hint.letter_min_max_counter.get(letter,(0,0))[0]
 
         acc_min, _ =  accumulated_hints.letter_min_max_counter[letter]
+
         # it is a valid hard mode as long as the accumulated min count is followed
         if not current_hint_letter_count >= acc_min:
             return False
@@ -364,11 +392,12 @@ def process_all_hints(hints:List[tuple[str,str]], unknown_mark:str=UNKNOWN_MARK)
     Input: List of tuples. (Tuple of tuples are OK too)
     Each tuple has 2 strings - first is letter gussed and second is the result (Y/G/W)
 
+    (Optional parameter: Display letter for unknown characters will be change to this. Personally recommend one of these: */?/_)
+
     Output: Generator of correct patterns (as strings) and dictionary of additional information.
 
     """
     accumulated_hints = None
-
     is_hard_mode_compatible = True
 
     for h in hints:
@@ -401,7 +430,14 @@ def process_all_hints(hints:List[tuple[str,str]], unknown_mark:str=UNKNOWN_MARK)
     return patterns, additional_info
 
 
-def basic_hint_check(guess, guess_result):
+
+def verify_hints(guess:str, guess_result:str):
+    """Raise Exception if the guess or guess_result (G/Y/W) is invalid.
+
+    Note that a valid round hint can still be contradictory to accumulated hints.
+    Further checking like 4G1Y, 3Y on same letter will be done in validate_round_hint()
+    """
+
     if len(guess) != len(guess_result):
         raise ValueError("guess and guess_result have different length.")
 
@@ -411,16 +447,3 @@ def basic_hint_check(guess, guess_result):
     valid_result = all(r in "GYW" for r in guess_result)
     if not valid_result:
         raise ValueError("Something not G/Y/W inside the guess_result string: {}".format(guess_result))
-
-    return True
-
-def verify_hints(guess:str, guess_result:str):
-    """Return True if the single round hint is valid on its own. Otherwise raise Exception.
-
-    Valid means "nothing contradictory".Some invalid inputs are like 4G1Y, 3Y on same letter (when Wordle size is 5)
-
-    Note that a valid round hint can still be contradictory to accumulated hints.
-
-    """
-
-    basic_hint_check(guess, guess_result)  # length and WGY only
