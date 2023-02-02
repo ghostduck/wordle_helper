@@ -20,17 +20,19 @@ We have these outcome of guesses:
 
 Basically, every hint is telling us more things to exclude.
 
+------------------------------------------------
+
 ## Data structure
 
-For **green hints**, just use a List of `None` and correct letters. Every non-none entry refers to the correct letter.
+For **green hints**, just use a List of `None` and correct letters. Every non-none entry refers to the correct letter at the correct position.
 
-For **yellow hints**, we use a dictionary of letter to positions to exclude. Positions to exclude is a set of indices (integers). We can construct the list of possible locations easily from it.
+For **yellow hints**, we use a dictionary of letter to map positions to exclude. Positions to exclude is a set of indices (integers). We can construct the list of possible locations easily from it.
 
-The positions to exclude is very important. Note that it does not include the location of other green hints. The green hint surely means we should exclude that position but we only **do that at the final stage**.
+The positions to exclude is very important. Note that the set does not include the location of other green hints. The green hint surely means we should exclude that position but we only **do that at the final stage**.
 
-For **wrong hint**s, we simply use a set.
+For **wrong hints**, we simply use a set.
 
-In my design, letters in this set means they have **maximum and minimum length of 0** in the correct word.
+In my design, letters in this set means they have **minimum and maximum length of 0** in the correct word.
 
 Do not forget that wrong hint gives us the location to exclude for yellow hint in multi-letter cases. And thanks to the multi-letter cases, some letters may go between wrong or yellow in rounds.
 
@@ -48,17 +50,23 @@ We also have another dictionary known as **min max counter** to record the minim
 
 Once we know the maximum count of a letter (by getting hint of G/Y and W at the same time), that letter needs to be excluded from blind guesses recommendation too.
 
-In my design, these letter will be returned together with letters in *wrong hint* when requested (in function call).
+In my design, these letter will be returned together with letters in **wrong hint** when requested (in function `letters_for_unknown_guess()`).
 
 ------------------------------------------------
 
 ## Verifications
 
-Verify single round hint then verify against global(accumulated) hints.
+There can be many copy and paste error or simply users will just try random inputs. Therefore I try to write codes to verify the inputs.
 
-I am trying my best to include all the impossible / contradictory cases with as fewer rules as I can think of.
+### Basic rules
+
+Users will supply us with many rounds of input. Each round has 2 strings, one is the guess (guess letters) and guess results (Green/Yellow/Wrong indicator).
+
+Basic checking is implemented in `verify_hints()`, only check both guess and guess results have same length, guess has something (length >= 1) and only G/Y/W in result.
 
 ### Rules
+
+So many things can go wrong. I try to include as much as I can...
 
 1. Number of letter hints (letter and locations to exclude) **MUST NOT** be greater than the whole length
 
@@ -80,19 +88,31 @@ I am trying my best to include all the impossible / contradictory cases with as 
 
     Slightly difficult to generalize. This is refering to contradictory hints.
 
-    Examples:
+    Let us assume the hint of first round is always correct. (No inconsistent single round hint like 4G1Y or 3Y for same letter). Further round hints should only be added if they are not contradictory to current accumulated hints.
 
-    - Same letter at the same position changes from G to B/W in rounds
-    - Same letter at the same position changes from B/W to G in rounds
-    - Single letter case: same position changes from B/W to something else in rounds
-    - Change of min_count is out of range
+    Logical rules:
 
-    Try to show another example from the perspective of data:
+    For wrong hint (not multiple letter case): (from the perspective of **round hint**)
+    - Letters must not be in accmulated G/W hints
 
-    - green_hints: be consistent between rounds (B/W to G, G to B/W changes)
-    - y_w_hint_excluded_position: allow to add new entries of letter, just add more to existing range as long as other checks are OK
-    - wrong_letters: Can only be greater (previous set must be subset of current set)
-    - letter_min_max_counter: allow to add new entries of letter, existing min can increase and max can decrease but must be consistent and within old range. Do not forget non-hard mode Wordle game case: new round hints no need to follow previous hints. So as long as the min_count is within the range, that hint is "not wrong" but we probably ignore the count hint
+    For yellow hint: (from the perspective of **round hint**)
+    - Cannot be in the accmulated wrong hint
+    - Cannot exclude the position for that green letter in accmulated green hint
+
+    For green hint: (from the perspective of **round hint**)
+    - If acc_green_hint[i] is known, round_green_hint[i] MUST BE equal to acc_green_hint[i]
+    - Cannot be in the accmulated wrong hint
+    - Cannot be excluded in accmulated yellow hint
+
+    - Another way of saying the green hints is:
+        1.)If the position result is green, the letter must be "that letter". AND
+        2.)If "that letter" is at position X, the result must be green.
+    - For position X: Invalid == (round_letters[x] == acc_letter[x]) XOR (round_pos_color[x] == GREEN)
+
+    For each G/Y entry counter:
+    - Count of each letter must be in range
+
+    By the way remember that in single round, a position cannot be excluded in yellow hint and be correct as green hint at the same time.
 
 ## How to handle yellow hints letter turns green later?
 
