@@ -15,6 +15,16 @@ GACHI WWWWW
 GACHIBASS WWWWWGWGG
 
 # --------------------------------
+= Too many different correct letters
+ABCDE YYYYW
+FGHIJ WWYYY
+
+= Sum of corrects letters greater than length
+AABBB YYWWW
+CCCDD WWWYY
+FEEFF WYYWW
+
+# --------------------------------
 
 # Invalid cases - contradictory to previous hints
 # About the cases involving Green cases: Don't forget user no need to force same correct Green letter in nomral mode
@@ -50,6 +60,7 @@ SURGE YWWWW
 SLIDE WWWWW
 
 # First hint shows only 1 M but second hint show 2 or more is correct
+# Also known as inconsistent min_count of letter
 = Contradictory number of letters 1
 MM??? YWWWW
 ???MM WWWGG

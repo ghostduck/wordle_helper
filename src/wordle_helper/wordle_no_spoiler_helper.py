@@ -320,6 +320,11 @@ def validate_round_hint(round_hint:OverallHint):
     # Exception will be raised if combination cannot be generated
     round_hint.generate_combinations()
 
+    # check number of letters for correct guesses (G/Y)
+    hint_min_sum = sum([v[0] for v in round_hint.letter_min_max_counter.values()])
+    if len(round_hint.green_hints) < hint_min_sum:
+        raise ValueError("More correct letters than length of correct word")
+
 
 def merge_hint(accumulated_hints:OverallHint, round_hint:OverallHint):
     # Assume no contradictions since already checked in other functions
