@@ -19,7 +19,7 @@ class OverallHint:
 
     # yellow/wrong hint about the positions to exclude
     # dict of letter to set of int (positions to exclude, 0-based)
-    y_w_hint_excluded_position: Dict[str, Set[int]] = field(default_factory=defaultdict)
+    y_w_hint_excluded_position: Dict[str, Set[int]] = field(default_factory=dict)
 
     # letters hinted for wrong guesses only (single letter W or multi-letter all W)
     # Just treat letters here have "A": (min: 0, max: 0)
@@ -27,7 +27,7 @@ class OverallHint:
     # We will hint "correct letter but do not guess them anymore" (min_count == max_count) later
 
     # {"A": (min, max)} # min max is the letter count
-    letter_min_max_counter: Dict[str, tuple[int, int]] = field(default_factory=defaultdict)
+    letter_min_max_counter: Dict[str, tuple[int, int]] = field(default_factory=dict)
 
     def generate_combinations(self) -> Dict[str, List[tuple[int]]]:
         """Return a dict of letter to List. Each list contains combinations of possible positions (as a tuple of int) for yellow hints guess. It does not contain green positions.
@@ -275,42 +275,43 @@ def cross_check_wrong_hints(hint1:OverallHint, hint2:OverallHint):
             raise ValueError("Letter {} failed wrong hint cross check".format(letter))
 
 
-def verify_contradiction(accumulated_hints:OverallHint, round_hint:OverallHint):
+def verify_contradiction(accumulated_hints_before_merge:OverallHint, round_hint:OverallHint):
     """Raise if contradiction of 2 hints are found.
 
     Both hint are expected to refer to the same correct word.
 
     We assume the accumulated_hints have the correct information.
     """
-    for i, (acc_hint_letter, round_hint_letter) in enumerate(zip(accumulated_hints.green_hints, round_hint.green_hints, strict=True)):
+    for i, (acc_hint_letter, round_hint_letter) in enumerate(zip(accumulated_hints_before_merge.green_hints, round_hint.green_hints, strict=True)):
 
+        # For both accumulated and round hint, nothing to verify if we don't know the correct letter for this position
         if acc_hint_letter is not None:
-            # There are nothing to verify if we don't know the correct for this position for both accumulated and round hint
-
             # G -> Y (same position)
             # Use dict.get() to return empty list for non-existing key so that part is False
             if i in round_hint.y_w_hint_excluded_position.get(acc_hint_letter, []):
                 raise ValueError("Current yellow hint excludes position {} for letter {} but it was green before".format(i, acc_hint_letter))
 
-        # Not equal is expected if acc_hint_letter is None (case of getting new green letter)
-        if round_hint_letter is not None and acc_hint_letter != round_hint_letter:
+        if round_hint_letter is not None:
             # Y -> G (same position)
-            if i in accumulated_hints.y_w_hint_excluded_position[round_hint_letter]:
+            # Note: DON'T use y_w_hint_excluded_position[letter] as it will create empty set in real dict
+            if i in accumulated_hints_before_merge.y_w_hint_excluded_position.get(round_hint_letter, set()):
                 raise ValueError("Current round is green hint for letter {} at position {} but it was excluded before in yellow/wrong hint".format(round_hint_letter, i))
 
-            if acc_hint_letter is not None:
-                # G -> G (Same position, different letter)
-                raise ValueError("Inconsistent green hint: current round letter {}, current accumulated hint {}, current index {}".format(round_hint_letter, accumulated_hints.green_hints[i], i))
+        if round_hint_letter is not None and \
+        acc_hint_letter is not None and \
+        acc_hint_letter != round_hint_letter:
+            # G -> G (Same position, different letter)
+            raise ValueError("Inconsistent green hint: current round letter {}, current accumulated hint {}, current index {}".format(round_hint_letter, accumulated_hints_before_merge.green_hints[i], i))
 
-        # G/Y -> W
-        cross_check_wrong_hints(accumulated_hints, round_hint)
-        # W -> G/Y
-        cross_check_wrong_hints(round_hint, accumulated_hints)
+    # G/Y -> W
+    cross_check_wrong_hints(accumulated_hints_before_merge, round_hint)
+    # W -> G/Y
+    cross_check_wrong_hints(round_hint, accumulated_hints_before_merge)
 
     # Check length
     for letter, (min_len, _) in round_hint.letter_min_max_counter.items():
-        if letter in accumulated_hints.letter_min_max_counter:
-            acc_min, acc_max = accumulated_hints.letter_min_max_counter[letter]
+        if letter in accumulated_hints_before_merge.letter_min_max_counter:
+            acc_min, acc_max = accumulated_hints_before_merge.letter_min_max_counter[letter]
             # Note: [range(1,1)] gives empty list, so don't forget +1 on max
             if min_len not in range(acc_min, acc_max+1):
                 raise ValueError("Number of letters of {} is contradictory to accumulated hint - must be between {} to {}. Current length is {}".format(letter, acc_min, acc_max, min_len))
@@ -363,7 +364,7 @@ def generate_round_data(guess:str, guess_result:str):
     return green_hints, y_w_hint_excluded_position, wrong_letters, letter_min_max_counter
 
 
-def check_hint_is_hard_compatible(accumulated_hints:OverallHint, round_hint:OverallHint):
+def check_hint_is_hard_compatible(accumulated_hints_before_merge:OverallHint, round_hint:OverallHint):
     """Return True if:
     1) all green hints in accumulated_hints are used and
     2) all yellow hints in accumulated_hints are used. These hints end up as green or yellow hint in round hint.
@@ -374,22 +375,58 @@ def check_hint_is_hard_compatible(accumulated_hints:OverallHint, round_hint:Over
     """
 
     # First check all green hints in accumulated_hints are followed or not
-    for acc_hint_letter, round_hint_letter in zip(accumulated_hints.green_hints, round_hint.green_hints, strict=True):
+    for acc_hint_letter, round_hint_letter in zip(accumulated_hints_before_merge.green_hints, round_hint.green_hints, strict=True):
         if acc_hint_letter is not None and round_hint_letter != acc_hint_letter:
             return False
 
     # Then check all yellow hints in accumulated_hints are used or not
-    for letter in accumulated_hints.y_w_hint_excluded_position:
+    for letter in accumulated_hints_before_merge.y_w_hint_excluded_position:
         # prevent raising KeyNotFound - get 0 instead for this case
         current_hint_letter_count = round_hint.letter_min_max_counter.get(letter,(0,0))[0]
 
-        acc_min, _ =  accumulated_hints.letter_min_max_counter[letter]
+        acc_min, _ =  accumulated_hints_before_merge.letter_min_max_counter[letter]
 
         # it is a valid hard mode as long as the accumulated min count is followed
         if not current_hint_letter_count >= acc_min:
             return False
 
     return True
+
+def check_hint_is_super_hard_compatible(accumulated_hints_before_merge:OverallHint, round_hint:OverallHint):
+    """Return True if round hint is a valid for "super hard" mode or not.
+
+    Super hard mode is not defined in normal Wordle. Some other variants implemented that.
+    It means "totally no waste" by matching these conditions:
+    0) Must be in hard mode
+    1) Confirmed Wrong hints cannot be used at future guesses
+    2) Yellow/Wrong hints excluded positions cannot be used for that letter
+    3) Green/Wrong or Yellow/Wrong hints shows the upper limit of that letter and this must be followed
+
+    This function only checks 1 to 3.
+
+    In other words, "super hard" mode means only guessing the correct pattern from correct_pattern_gen() and strictly use letters from letters_for_unknown_guess()
+    """
+
+    # 1) Simply set intersection
+    if round_hint.wrong_letters & accumulated_hints_before_merge.wrong_letters:
+            return False
+
+    # 2) Also set intersection but need to handle key not found
+    for letter, pos in round_hint.y_w_hint_excluded_position.items():
+        acc_pos = accumulated_hints_before_merge.y_w_hint_excluded_position.get(letter, set())
+        if acc_pos & pos:
+            return False
+
+    # 3) Check length and use the upper limit
+    # Mostly copy from check_hint_is_hard_compatible()
+    for letter in accumulated_hints_before_merge.y_w_hint_excluded_position:
+        current_hint_letter_count = round_hint.letter_min_max_counter.get(letter,(0,0))[0]
+        acc_min, acc_max =  accumulated_hints_before_merge.letter_min_max_counter[letter]
+        if current_hint_letter_count not in range(acc_min, acc_max+1):
+            return False
+
+    return True
+
 
 def process_all_hints(hints:List[tuple[str,str]], unknown_mark:str=UNKNOWN_MARK):
     """The main part of the module. Return the generator with additional data of the Wordle guesses.
@@ -404,6 +441,9 @@ def process_all_hints(hints:List[tuple[str,str]], unknown_mark:str=UNKNOWN_MARK)
     """
     accumulated_hints = None
     is_hard_mode_compatible = True
+    is_super_hard_mode_compatible = True
+
+    # Can add more features here
 
     for h in hints:
         verify_hints(*h)
@@ -416,12 +456,17 @@ def process_all_hints(hints:List[tuple[str,str]], unknown_mark:str=UNKNOWN_MARK)
             accumulated_hints = o_h
         else:
             verify_contradiction(accumulated_hints, o_h)
-            merge_hint(accumulated_hints, o_h)
-            validate_round_hint(accumulated_hints)
 
             # for additional info only
+            # Check round hints before merge
             if is_hard_mode_compatible:
                 is_hard_mode_compatible = check_hint_is_hard_compatible(accumulated_hints, o_h)
+
+            if is_super_hard_mode_compatible:
+                is_super_hard_mode_compatible = is_hard_mode_compatible and check_hint_is_super_hard_compatible(accumulated_hints, o_h)
+
+            merge_hint(accumulated_hints, o_h)
+            validate_round_hint(accumulated_hints)
 
     # All hints are processed
     patterns = accumulated_hints.correct_pattern_gen(unknown_mark)
@@ -430,6 +475,7 @@ def process_all_hints(hints:List[tuple[str,str]], unknown_mark:str=UNKNOWN_MARK)
     additional_info = dict()
     additional_info["letters_for_unknown_guess"] = accumulated_hints.letters_for_unknown_guess()
     additional_info["is_hard_mode_compatible"] = is_hard_mode_compatible
+    additional_info["is_super_hard_mode_compatible"] = is_super_hard_mode_compatible
     additional_info["is_normal_wordle_game"] = len(accumulated_hints.green_hints) == WORDLE_LENGTH and len(hints) <= MAX_TRY
 
     return patterns, additional_info

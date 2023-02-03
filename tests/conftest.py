@@ -42,6 +42,25 @@ def rupee_case(request):
     ]
 
 @pytest.fixture
+def robin_case(request):
+    return (
+        ("PRIDE","WYYWW"),
+        ("MIRTH","WYYWW"),
+        ("FLAIR","WWWGY"),
+        ("ROBIN","GGGGG"),
+    )
+
+@pytest.fixture
+def flair_case(request):
+    return (
+        ("PRIDE","WYYWW"),
+        ("BIRTH","WYYWW"),
+        ("INFRA","YWYYY"),
+        ("FAIRY","GYYYW"),
+        ("FLAIR","GGGGG"),
+    )
+
+@pytest.fixture
 def silly_cross_case(request):
     return (
         # Correct answer: SCOLD

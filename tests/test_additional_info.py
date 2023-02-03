@@ -65,6 +65,37 @@ def test_normal_add_info_cases_from_fixtures(normal_case, request):
     assert extra_info["is_hard_mode_compatible"] == True
     assert extra_info["is_normal_wordle_game"] == True
 
+@pytest.mark.parametrize("normal_super_hard_case",
+    [
+        ("flair_case"),  # Failed at FAIRY guess
+        ("rupee_case"),  # Failed at CREPE guess
+        ("silly_cross_case"),
+    ]
+)
+def test_add_info_failed_super_hard_from_fixtures(normal_super_hard_case, request):
+    normal_super_hard_case = request.getfixturevalue(normal_super_hard_case)
+
+    # By real test cases are all in hard mode
+    _, extra_info = process_all_hints(normal_super_hard_case)
+
+    assert extra_info["is_hard_mode_compatible"] == True
+    assert extra_info["is_super_hard_mode_compatible"] == False
+    assert extra_info["is_normal_wordle_game"] == True
+
+
+@pytest.mark.parametrize("normal_super_hard_case",
+    [
+        ("robin_case"),
+    ]
+)
+def test_add_info_normal_super_hard_from_fixtures(normal_super_hard_case, request):
+    normal_super_hard_case = request.getfixturevalue(normal_super_hard_case)
+
+    # By real test cases are all in hard mode
+    _, extra_info = process_all_hints(normal_super_hard_case)
+
+    assert extra_info["is_super_hard_mode_compatible"] == True
+    assert extra_info["is_normal_wordle_game"] == True
 
 @pytest.mark.parametrize("normal_case",
     [
