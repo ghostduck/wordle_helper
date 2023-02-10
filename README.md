@@ -1,10 +1,12 @@
-# The module
+# The spoiler free Wordle helper module
 
 Pure Python3 module to show Wordle hints without spoilers.
 
 No list of words are used. Only show the pattern from the hints from guesses.
 
 The only external dependency is `pytest` for testing only.
+
+---------------------------------------------
 
 ## Sample run on driver program (Console, Standard output)
 
@@ -87,6 +89,8 @@ The output:
 Patterns for correct word:  ['REP*E', 'R*PEE']
 Patterns for correct word:  ['*AMER']
 ```
+
+---------------------------------------------
 
 ## Run the test
 

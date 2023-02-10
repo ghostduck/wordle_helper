@@ -50,11 +50,14 @@ class OverallHint:
                 letter_min_count[letter] -= 1
                 green_positions_to_exclude.append(i)
 
+                # This local counter contains both G and Y hints, remove G hints
+                # so the counter will be for Y hints only
                 if letter_min_count[letter] == 0:
                     del letter_min_count[letter]
 
-        # combinations parts
-        # For individual letter exclusion, exclude green hint and then its yellow hints exclusion
+        # combinations parts (Yellow hints)
+        # For individual letter exclusion, exclude green hint
+        # and then its yellow hints exclusion
         # (Full - green - yw_hints[letter])
         full_length = [i for i in range(len(self.green_hints)) if i not in green_positions_to_exclude]
 
@@ -449,33 +452,36 @@ def process_all_hints(hints:List[tuple[str,str]], unknown_mark:str=UNKNOWN_MARK)
         verify_hints(*h)
 
         data = generate_round_data(*h)
-        o_h = OverallHint(*data) # do not forget the * to unpack tuple
+        current_hints = OverallHint(*data) # do not forget the * to unpack tuple
 
-        validate_round_hint(o_h)
+        validate_round_hint(current_hints)
         if accumulated_hints is None:  # for first round hint
-            accumulated_hints = o_h
+            accumulated_hints = current_hints
         else:
-            verify_contradiction(accumulated_hints, o_h)
+            verify_contradiction(accumulated_hints, current_hints)
 
             # for additional info only
             # Check round hints before merge
             if is_hard_mode_compatible:
-                is_hard_mode_compatible = check_hint_is_hard_compatible(accumulated_hints, o_h)
+                is_hard_mode_compatible = check_hint_is_hard_compatible(accumulated_hints, current_hints)
 
             if is_super_hard_mode_compatible:
-                is_super_hard_mode_compatible = is_hard_mode_compatible and check_hint_is_super_hard_compatible(accumulated_hints, o_h)
+                is_super_hard_mode_compatible = is_hard_mode_compatible and check_hint_is_super_hard_compatible(accumulated_hints, current_hints)
 
-            merge_hint(accumulated_hints, o_h)
+            merge_hint(accumulated_hints, current_hints)
             validate_round_hint(accumulated_hints)
 
     # All hints are processed
     patterns = accumulated_hints.correct_pattern_gen(unknown_mark)
+    # Can add read a dictionary with spoiler here then filter out the words here
+    # But I am not going to do that as this is no spoiler hint provider
 
     # for additional info only
     additional_info = dict()
     additional_info["letters_for_unknown_guess"] = accumulated_hints.letters_for_unknown_guess()
     additional_info["is_hard_mode_compatible"] = is_hard_mode_compatible
     additional_info["is_super_hard_mode_compatible"] = is_super_hard_mode_compatible
+    # Can add checking like no more entries after GGGGG but I don't bother it for now
     additional_info["is_normal_wordle_game"] = len(accumulated_hints.green_hints) == WORDLE_LENGTH and len(hints) <= MAX_TRY
 
     return patterns, additional_info

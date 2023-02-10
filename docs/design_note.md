@@ -56,7 +56,7 @@ In my design, these letter will be returned together with letters in **wrong hin
 
 ## Verifications
 
-There can be many copy and paste error or simply users will just try random inputs. Therefore I try to write codes to verify the inputs.
+There can be many copy and paste errors or simply users will just try random inputs. Therefore I try to write codes to verify the inputs.
 
 ### Basic rules
 
@@ -93,7 +93,7 @@ So many things can go wrong. I try to include as much as I can...
     Logical rules:
 
     For wrong hint (not multiple letter case): (from the perspective of **round hint**)
-    - Letters must not be in accmulated G/W hints
+    - Letters must not be in accmulated G/Y hints
 
     For yellow hint: (from the perspective of **round hint**)
     - Cannot be in the accmulated wrong hint
@@ -114,18 +114,60 @@ So many things can go wrong. I try to include as much as I can...
 
     By the way remember that in single round, a position cannot be excluded in yellow hint and be correct as green hint at the same time.
 
+------------------------------------------------
+
 ## How to handle yellow hints letter turns green later?
+
+In normal Wordle game, we keep trying letters and we may have yellow letters. Then we make more guesses until we get all letters correct. We can see some letters goes from yellow to green in this case. **I call this Y->G.**
+
+How would the code deal with this?
+
+Originally I thought of "hint promotion" and delete the "old" yellow hint. However,this approach is not correct since yellow hints - the positions to exclude are always correct. So yellow hints should not be deleted at all.
+
+(An error if we delete yellow hints then later hint report it is green at the same position)
+
+So we simply just permanently store all the yellow hints (position to exclude).
+
+When we build the combinations of yellow hints, we use the letter counter which take cares of both green and yellow hint to minus green hints to get the correct count of yellow hints.
+
+------------------------------------------------
 
 ## From hints to letter, combinations pairs
 
 Steps:
 
 1. Exclude green hints positions. (Local variable for "globally excluded position")
-1. For each green hint letter, reduce the min count in the counter. If counter reduced to 0, remove that entry in counter and y_w_hint_excluded_position.
-1. Generate combinations from counter and positions to exclude, including the green positions.
+1. For each green hint letter, reduce the min count in the counter. If counter reduced to 0, remove that entry in letter counter.
+1. (Now letter counter only contains yellow hints) Generate combinations from counter and positions to exclude, including the green positions.
     - For example, "E" and remaining valid positions are {1,2,4} and the counter for "E" is 2. We will generate "E" with {1,2}, {2,4} and {1,4}
 1. If valid combinations cannot be generated, then there must be problems with the inputs.
 
-## Loop inside the stack
+## From letter combinations pairs to correct pattern
 
-Like a DFS search but we have to loop everything anyway. Yield that stack when all hints are used.
+Originally I thought of using Trie and "DFS search like" ideas to generate the correct patterns.
+
+It is like :
+    1. choose a letter (the one with least combinations)
+    1. choose one of the combinations and queue up other combinations, exclude the used positions
+    1. prepare other unused letters
+    1. repeat first step for that unused letter
+    1. repeat until all letters are used
+
+This way we know something is wrong if all positions are exclude for some letters.
+
+Later I find that it quite troublesome - have to consider next nodes (all unused letters). That is not easy.
+
+In the end, this idea is not much better than simply using "N-level nested for loop" and check if valid or not...
+
+So I end up using simply bruteforce all combinations and check if there are not duplicated positions or not.
+
+1. Get all letters and combinations
+1. From each letter, choose 1 combinations
+1. If all indices unique (same as no repetitions on indices), it is valid pattern
+1. Plug-in the combination with green hint to show correct pattern`
+
+------------------------------------------------
+
+## Why return a generator for the patterns (instead of a list)?
+
+The pattern can be very long. Returning a generator allows users to do more things with it, like using a word dictionary with the patterns generated.
