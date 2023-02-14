@@ -2,6 +2,8 @@
 
 Pure Python3 module to show Wordle hints without spoilers.
 
+Run on Python 3.11.
+
 No list of words are used. Only show the pattern from the hints from guesses.
 
 The only external dependency is `pytest` for testing only.
