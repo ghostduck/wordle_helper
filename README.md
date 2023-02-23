@@ -1,10 +1,10 @@
 # The spoiler free Wordle helper module
 
-Pure Python3 module to show Wordle hints without spoilers.
+Pure Python3 module to show Wordle hints without spoilers running on Python 3.11.
 
-Run on Python 3.11.
+No list of words/dictionary is used. This module shows the correct patterns from the hints in guesses.
 
-No list of words are used. Only show the pattern from the hints from guesses.
+This helper module is very useful when you get several yellow letters.
 
 The only external dependency is `pytest` for testing only.
 
@@ -30,7 +30,7 @@ SPARE WYWYG
 CREPE WYYYG
 ```
 
-These are 2 sets of data of 2 Wordle games.
+These are 2 sets of data of 2 Wordle games. Each of them has 3 guess.
 
 Output of the sample driver program - Note that first few lines after each run are the colored output of the Wordle state (G/Y/W in background). The colour cannot be shown in this README file.
 
@@ -39,7 +39,9 @@ Output of the sample driver program - Note that first few lines after each run a
 PRIDE
 BIRTH
 INFRA
-{'is_hard_mode_compatible': True, 'is_normal_wordle_game': True}
+{'is_hard_mode_compatible': True,
+ 'is_normal_wordle_game': True,
+ 'is_super_hard_mode_compatible': True}
 Letters for blind guess:
  Q W _ R _ Y U I O _
   A S _ F G _ J K L
@@ -51,7 +53,9 @@ Patterns for correct word:  ['RFAI*', 'RA*IF', 'R*AIF', 'RFA*I', 'RF*AI', 'RA*FI
 PRIDE
 SPARE
 CREPE
-{'is_hard_mode_compatible': True, 'is_normal_wordle_game': True}
+{'is_hard_mode_compatible': True,
+ 'is_normal_wordle_game': True,
+ 'is_super_hard_mode_compatible': False}
 Letters for blind guess:
  Q W E R T Y U _ O P
   _ _ _ F G H J K L
@@ -141,3 +145,9 @@ $ pytest -s               # equivalent to previous command
 
 $ pytest -v  # show more details on test
 ```
+
+## Other information
+
+I recommend telling git to ignore changes in `test_data.txt` as I find myself keep adding cases in the file when playing Wordles...
+
+`git update-index --skip-worktree test_data.txt`
