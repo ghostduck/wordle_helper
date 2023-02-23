@@ -50,7 +50,7 @@ We also have another dictionary known as **min max counter** to record the minim
 
 Once we know the maximum count of a letter (by getting hint of G/Y and W at the same time), that letter needs to be excluded from blind guesses recommendation too.
 
-In my design, these letter will be returned together with letters in **wrong hint** when requested (in function `letters_for_unknown_guess()`).
+In my design, these letters will be returned together with letters in **wrong hint** when requested (in function `letters_for_unknown_guess()`).
 
 ------------------------------------------------
 
@@ -147,11 +147,12 @@ Steps:
 Originally I thought of using Trie and "DFS search like" ideas to generate the correct patterns.
 
 It is like :
-    1. choose a letter (the one with least combinations)
-    1. choose one of the combinations and queue up other combinations, exclude the used positions
-    1. prepare other unused letters
-    1. repeat first step for that unused letter
-    1. repeat until all letters are used
+
+1. choose a letter (the one with least combinations)
+1. choose one of the combinations and queue up other combinations, exclude the used positions
+1. prepare other unused letters
+1. repeat first step for that unused letter
+1. repeat until all letters are used
 
 This way we know something is wrong if all positions are exclude for some letters.
 
@@ -162,12 +163,12 @@ In the end, this idea is not much better than simply using "N-level nested for l
 So I end up using simply bruteforce all combinations and check if there are not duplicated positions or not.
 
 1. Get all letters and combinations
-1. From each letter, choose 1 combinations
+1. From each letter, choose 1 combination
 1. If all indices unique (same as no repetitions on indices), it is valid pattern
-1. Plug-in the combination with green hint to show correct pattern`
+1. Plug-in the combination with green hint to show correct pattern
 
 ------------------------------------------------
 
 ## Why return a generator for the patterns (instead of a list)?
 
-The pattern can be very long. Returning a generator allows users to do more things with it, like using a word dictionary with the patterns generated.
+The patterns can be very long (if it is longer version of Wordle like 9 letters). Returning a generator allows users to do more things with it, like using a word dictionary with the patterns generated.
